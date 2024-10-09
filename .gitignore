@@ -7,11 +7,12 @@ node_modules/
 # Build directories
 /frontend/build/
 /backend/build/
-
+firebase
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+serviceAccountKey.json
 
 # Operating system files
 .DS_Store
