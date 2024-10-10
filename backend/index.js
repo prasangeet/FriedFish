@@ -5,6 +5,9 @@ import dotenv from "dotenv";
 import authRoutes from './routes/auth.js'
 import authMiddleware from './middleware/auth.js';
 import profileRoutes from './routes/profile.js'
+import videoUploadRoutes from "./routes/videos/upload.js";
+import videoFetchRoutes from "./routes/videos/fetch.js";
+
 
 dotenv.config();
 
@@ -20,6 +23,8 @@ app.get("/", (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', authMiddleware, profileRoutes);
+app.use("/api/videos", videoUploadRoutes);
+app.use("/api/videos", videoFetchRoutes);
 
 //protectedRoute
 app.get('/api/protected', authMiddleware, (req, res) => {
