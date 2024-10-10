@@ -97,9 +97,9 @@ export default function Dashboard() {
       />
 
       {/* Content Wrapper */}
-      <div className="relative z-10 flex flex-grow w-full bg-white/30 dark:bg-slate-900/30">
+      <div className="relative z-10 flex flex-grow w-full bg-white/10 dark:bg-slate-900/10">
         {/* Sidebar */}
-        <div className="w-64 bg-white/60 dark:bg-slate-900/60 shadow-lg transition-colors duration-200 border-r border-blue-200 dark:border-cyan-500 dark:border-opacity-50">
+        <div className="w-64 bg-white/40 dark:bg-slate-900/40 shadow-lg transition-colors duration-200 border-r border-blue-200 dark:border-cyan-500 dark:border-opacity-50">
           <ScrollArea className="h-screen">
             <div className="p-6">
               <h2 className="text-2xl font-bold text-blue-600 dark:text-cyan-400 mb-6 transition-colors duration-200">
