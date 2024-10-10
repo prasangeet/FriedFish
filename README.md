@@ -33,5 +33,5 @@
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/prasangeet/friedfish.git
+git clone https://github.com/prasangeet/FriedFish.git
 cd friedfish
