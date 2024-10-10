@@ -18,7 +18,8 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
+const auth = admin.auth(); 
 
 console.log('Firebase Storage Bucket:', process.env.FIREBASE_STORAGE_BUCKET);
 
-export { admin, db, bucket };
+export { admin, db, bucket, auth };
