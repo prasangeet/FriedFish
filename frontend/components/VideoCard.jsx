@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlayIcon } from "lucide-react";
 import { db } from "@/firebase";
-import { doc, getDoc } from "firebase/firestore"; // Import the required functions
+import { doc, getDoc } from "firebase/firestore";
 
-const VideoCard = ({ title, thumbnail, duration, views, userId }) => {
+const VideoCard = ({ id, title, thumbnail, duration, views, userId }) => {
   const [displayName, setDisplayName] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
-    // Fetch the user's displayName based on userId
     const fetchDisplayName = async () => {
       try {
-        // Use doc() to create a reference to the user document
-        const userDocRef = doc(db, "users", userId); // Change this line
-        const userDoc = await getDoc(userDocRef); // Use getDoc() to fetch the document
+        const userDocRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
           setDisplayName(userDoc.data().displayName);
@@ -26,8 +26,15 @@ const VideoCard = ({ title, thumbnail, duration, views, userId }) => {
     fetchDisplayName();
   }, [userId]);
 
+  const handleClick = () => {
+    router.push(`/video/${id}`);
+  };
+
   return (
-    <Card className="overflow-hidden border-primary/10 shadow-[0_4px_10px_rgba(var(--neon-primary-rgb),0.1)] transition-all duration-300 hover:shadow-[0_4px_20px_rgba(var(--neon-primary-rgb),0.2)] hover:-translate-y-1">
+    <Card 
+      className="overflow-hidden border-primary/10 shadow-[0_4px_10px_rgba(var(--neon-primary-rgb),0.1)] transition-all duration-300 hover:shadow-[0_4px_20px_rgba(var(--neon-primary-rgb),0.2)] hover:-translate-y-1 cursor-pointer"
+      onClick={handleClick}
+    >
       <div className="relative">
         <img src={thumbnail} alt={title} className="w-full h-40 object-cover" />
         <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">

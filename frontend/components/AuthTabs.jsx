@@ -7,22 +7,28 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebase";
-import { Eye, EyeOff } from "lucide-react"; // Import eye icons (assuming you're using lucide-react or similar)
+import { Eye, EyeOff } from "lucide-react";
 
 const AuthTabs = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [message, setMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const router = useRouter();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setProgress(0);
     try {
+      setProgress(20);
       const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
         headers: {
@@ -34,15 +40,18 @@ const AuthTabs = () => {
       const data = await response.json();
 
       if (response.ok) {
+        setProgress(40);
         setMessage(`Sign Up successful! UID: ${data.uid}`);
 
         // Sign in the user with Firebase
+        setProgress(60);
         const userCredential = await signInWithEmailAndPassword(
           auth,
           email,
           password
         );
 
+        setProgress(80);
         const loginResponse = await fetch(
           "http://localhost:5000/api/auth/login",
           {
@@ -57,6 +66,7 @@ const AuthTabs = () => {
         const loginData = await loginResponse.json();
 
         if (loginResponse.ok) {
+          setProgress(100);
           localStorage.setItem("token", loginData.token);
           setMessage(`Login successful! Welcome ${loginData.displayName}`);
           router.push("/dashboard");
@@ -68,17 +78,24 @@ const AuthTabs = () => {
       }
     } catch (error) {
       setMessage(`Error: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+      setProgress(0);
     }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setProgress(0);
     try {
+      setProgress(33);
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
+      setProgress(66);
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: {
@@ -90,6 +107,7 @@ const AuthTabs = () => {
       const data = await response.json();
 
       if (response.ok) {
+        setProgress(100);
         localStorage.setItem("token", data.token);
         setMessage(`Login successful! Welcome ${data.displayName}`);
         router.push("/dashboard");
@@ -98,6 +116,9 @@ const AuthTabs = () => {
       }
     } catch (error) {
       setMessage(`Error: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+      setProgress(0);
     }
   };
 
@@ -124,31 +145,25 @@ const AuthTabs = () => {
                 />
               </div>
               <div className="space-y-2 relative">
-                {" "}
-                {/* Add relative positioning for the icon */}
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"} // Toggle input type
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-8 right-0 px-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <EyeOff/>
-                    ) : (
-                      <Eye />
-                    )}
-                  </button>
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-8 right-0 px-3 flex items-center"
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>
               </div>
-              <Button type="submit" className="w-full">
-                Login
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </TabsContent>
@@ -178,35 +193,34 @@ const AuthTabs = () => {
                 />
               </div>
               <div className="space-y-2 relative">
-                {" "}
-                {/* Add relative positioning for the icon */}
                 <Label htmlFor="signupPassword">Password</Label>
                 <Input
                   id="signupPassword"
-                  type={showPassword ? "text" : "password"} // Toggle input type
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-8 right-0 px-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <EyeOff/>
-                    ) : (
-                      <Eye />
-                    )}
-                  </button>
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-8 right-0 px-3 flex items-center"
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>
               </div>
-              <Button type="submit" className="w-full">
-                Sign Up
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Signing up..." : "Sign Up"}
               </Button>
             </form>
           </TabsContent>
         </Tabs>
+        {isLoading && (
+          <div className="mt-4">
+            <Progress value={progress} className="w-full" />
+          </div>
+        )}
         {message && (
           <Alert className="mt-4">
             <AlertDescription>{message}</AlertDescription>

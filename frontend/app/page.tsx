@@ -1,20 +1,46 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import AuthTabs from "@/components/AuthTabs";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      router.push("/dashboard");
-    }
+    const checkTokenValidity = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const response = await fetch("http://localhost:5000/api/verify-token", {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            router.push("/dashboard");
+          } else {
+            // Token is invalid, remove it from localStorage
+            localStorage.removeItem("token");
+            setError("Your session has expired. Please log in again.");
+          }
+        } catch (error) {
+          console.error("Error verifying token:", error);
+          setError("An error occurred while verifying your session. Please try again.");
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkTokenValidity();
   }, [router]);
 
   useEffect(() => {
@@ -29,6 +55,14 @@ export default function Home() {
     localStorage.setItem("darkMode", newDarkMode.toString());
     document.documentElement.classList.toggle("dark", newDarkMode);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <p className="text-lg text-gray-600 dark:text-gray-300">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -62,6 +96,11 @@ export default function Home() {
         <p className="text-center text-gray-600 dark:text-gray-300 mb-8">
           Stream your favorite content seamlessly.
         </p>
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <AuthTabs />
       </div>
     </div>

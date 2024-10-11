@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { auth } from '../../firebase.js'
+import { useParams } from 'next/navigation'
+import { auth } from '../../../firebase.js'
 import { onAuthStateChanged } from 'firebase/auth'
 import Layout from '@/components/Layout'
-import Sidebar from '@/components/Sidebar'
 import Header from '@/components/Header'
-import MainContent from '@/components/MainContent'
+import VideoPlayer from '@/components/VideoPlayer'
+import VideoDetails from '@/components/VideoDetails'
+import CommentSection from '@/components/CommentSection'
+import FeaturedVideos from '@/components/FeaturedVideos'
 import ProfileDialog from '@/components/ProfileDialog'
-import UploadDialog from '@/components/UploadDialog'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
@@ -20,26 +22,28 @@ const neonColors = {
   purple: { primary: "#a855f7", secondary: "#c084fc" },
 };
 
-export default function Dashboard() {
+export default function VideoPage() {
   const router = useRouter()
+  const params = useParams()
   const [darkMode, setDarkMode] = useState(false)
   const [user, setUser] = useState(null)
   const [uid, setUid] = useState(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [neonColor, setNeonColor] = useState('blue')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [videos, setVideos] = useState([])
+  const [video, setVideo] = useState(null)
   const [showAlert, setShowAlert] = useState(false)
+  const [featuredVideos, setFeaturedVideos] = useState([])
 
   useEffect(() => {
+    console.log('Params:', params);
+  
     const isDarkMode = localStorage.getItem('darkMode') === 'true'
     setDarkMode(isDarkMode)
     document.documentElement.classList.toggle('dark', isDarkMode)
-
+  
     const savedNeonColor = localStorage.getItem('neonColor') || 'blue'
     setNeonColor(savedNeonColor)
-
+  
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         console.log('User is authenticated:', currentUser)
@@ -52,11 +56,17 @@ export default function Dashboard() {
         setUser(null)
       }
     })
+  
+    if (params?.id) {
+      fetchVideo(params.id)
+    } else {
+      console.error('Video ID is undefined')
+    }
 
-    fetchVideos()
-
+    fetchFeaturedVideos()
+  
     return () => unsubscribe()
-  }, [])
+  }, [params])
 
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -107,9 +117,9 @@ export default function Dashboard() {
     }
   }
 
-  const fetchVideos = async () => {
+  const fetchVideo = async (id) => {
     const token = localStorage.getItem('token')
-    const response = await fetch('http://localhost:5000/api/videos', {
+    const response = await fetch(`http://localhost:5000/api/videos/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -121,9 +131,29 @@ export default function Dashboard() {
     }
     if (response.ok) {
       const data = await response.json()
-      setVideos(data)
+      setVideo(data)
     } else {
-      console.error('Failed to fetch videos')
+      console.error('Failed to fetch video')
+    }
+  }
+
+  const fetchFeaturedVideos = async () => {
+    const token = localStorage.getItem('token')
+    const response = await fetch('http://localhost:5000/api/videos/', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (response.status === 401) {
+      handleInvalidToken()
+      return
+    }
+    if (response.ok) {
+      const data = await response.json()
+      setFeaturedVideos(data)
+    } else {
+      console.error('Failed to fetch featured videos')
     }
   }
 
@@ -146,13 +176,8 @@ export default function Dashboard() {
     localStorage.setItem('neonColor', color)
   }
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen)
-  }
-
   return (
     <Layout darkMode={darkMode}>
-      <Sidebar mobileMenuOpen={mobileMenuOpen} />
       <div className="flex-grow flex flex-col">
         <Header
           darkMode={darkMode}
@@ -161,11 +186,23 @@ export default function Dashboard() {
           changeNeonColor={changeNeonColor}
           user={user}
           setDialogOpen={setDialogOpen}
-          setUploadDialogOpen={setUploadDialogOpen}
-          mobileMenuOpen={mobileMenuOpen}
-          toggleMobileMenu={toggleMobileMenu}
         />
-        <MainContent videos={videos} />
+        <div className="flex-grow flex ">
+          <main className="flex-grow p-6">
+            {video ? (
+              <>
+                <VideoPlayer video={video} />
+                <VideoDetails video={video} />
+                <CommentSection videoId={video.id} />
+              </>
+            ) : (
+              <p>Loading video...</p>
+            )}
+          </main>
+          <aside className="w-80 p-6 border-l border-gray-200 dark:border-gray-700">
+            <FeaturedVideos videos={featuredVideos} />
+          </aside>
+        </div>
       </div>
       <ProfileDialog
         open={dialogOpen}
@@ -173,11 +210,6 @@ export default function Dashboard() {
         user={user}
         uid={uid}
         fetchUserDetails={fetchUserDetails}
-      />
-      <UploadDialog
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        fetchVideos={fetchVideos}
       />
       {showAlert && (
         <div className="fixed top-4 right-4 z-50">

@@ -6,8 +6,11 @@ const router = express.Router();
 // Fetch a list of videos
 router.get("/", async (req, res) => {
   try {
-    const videosSnapshot = await db.collection("videos").orderBy("createdAt", "desc").get();
-    const videos = videosSnapshot.docs.map(doc => ({
+    const videosSnapshot = await db
+      .collection("videos")
+      .orderBy("createdAt", "desc")
+      .get();
+    const videos = videosSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
