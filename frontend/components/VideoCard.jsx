@@ -31,7 +31,7 @@ const VideoCard = ({ id, title, thumbnail, duration, views, userId }) => {
   };
 
   return (
-    <Card 
+    <Card
       className="overflow-hidden border-primary/10 shadow-[0_4px_10px_rgba(var(--neon-primary-rgb),0.1)] transition-all duration-300 hover:shadow-[0_4px_20px_rgba(var(--neon-primary-rgb),0.2)] hover:-translate-y-1 cursor-pointer"
       onClick={handleClick}
     >

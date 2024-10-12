@@ -199,7 +199,7 @@ export default function VideoPage() {
               <p>Loading video...</p>
             )}
           </main>
-          <aside className="w-80 p-6 border-l border-gray-200 dark:border-gray-700">
+          <aside className="w-90 p-6 border-l border-gray-200 dark:border-gray-700">
             <FeaturedVideos videos={featuredVideos} />
           </aside>
         </div>
