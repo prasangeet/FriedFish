@@ -1,60 +1,87 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { MessageCircle, ThumbsUp, Share2 } from "lucide-react"
-import { auth, db } from "@/firebase"
-import { doc, getDoc } from "firebase/firestore"
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { MessageCircle, ThumbsUp, Share2 } from "lucide-react";
+import { auth, db } from "@/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function CommentSection({ videoId }) {
-  const [comments, setComments] = useState([])
-  const [newComment, setNewComment] = useState("")
-  const [userName, setUserName] = useState("")
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [userName, setUserName] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
-    fetchComments()
-  }, [videoId])
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUserId(currentUser.uid);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchDisplayName = async () => {
+      try {
+        const userDocRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUserName(userDoc.data().displayName);
+          setProfilePicture(userDoc.data().profilePicture || ""); // Get profile picture or fallback
+        }
+      } catch (error) {
+        console.error("Error fetching displayName:", error);
+      }
+    };
+    fetchDisplayName();
+    fetchComments();
+  }, [userId, videoId]);
 
   const fetchComments = async () => {
     try {
       const response = await fetch(
         `http://localhost:5000/api/videos/${videoId}/comments`
-      )
-
+      );
+  
       if (response.ok) {
-        const data = await response.json()
-        setComments(data)
-        console.log("Fetched comments:", data)
+        const data = await response.json();
+        // Sort comments by createdAt in descending order
+        const sortedComments = data.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setComments(sortedComments);
+        console.log("Fetched comments:", sortedComments);
       } else {
-        console.log("Failed to load comments:", response.statusText)
+        console.log("Failed to load comments:", response.statusText);
       }
     } catch (error) {
-      console.error("Error fetching comments:", error)
+      console.error("Error fetching comments:", error);
     }
-  }
-
+  };
+  
   const handleSubmitComment = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const currentUser = auth.currentUser
+    const currentUser = auth.currentUser;
     if (!currentUser) {
-      console.error("User is not authenticated")
-      return
+      console.error("User is not authenticated");
+      return;
     }
-    const userId = currentUser.uid
+    const userId = currentUser.uid;
 
     try {
-      const userDocRef = doc(db, "users", userId)
-      const userDoc = await getDoc(userDocRef)
-      if (userDoc.exists()) {
-        setUserName(userDoc.data().displayName)
-      }
       console.log(userName);
-      
 
       const response = await fetch(
         `http://localhost:5000/api/videos/${videoId}/comments`,
@@ -68,21 +95,47 @@ export default function CommentSection({ videoId }) {
             content: newComment,
             user: userName,
             userId: userId,
+            profilePicture: profilePicture, // Send profile picture when posting comment
           }),
         }
-      )
+      );
 
       if (response.ok) {
-        setNewComment("")
-        fetchComments()
+        setNewComment("");
+        fetchComments();
       } else {
-        const errorData = await response.json()
-        console.error("Error posting comment:", errorData.error)
+        const errorData = await response.json();
+        console.error("Error posting comment:", errorData.error);
       }
     } catch (error) {
-      console.error("Error fetching user name:", error)
+      console.error("Error fetching user name:", error);
     }
-  }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/videos/${videoId}/comments/${commentId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Refresh comments after deletion
+        fetchComments();
+      } else {
+        const errorData = await response.json();
+        console.error("Error deleting comment:", errorData.error);
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
@@ -93,7 +146,10 @@ export default function CommentSection({ videoId }) {
         <form onSubmit={handleSubmitComment} className="mb-6">
           <div className="flex items-start space-x-4">
             <Avatar>
-              <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
+              <AvatarImage
+                src={profilePicture ? profilePicture : ""}
+                alt="User"
+              />
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
             <div className="flex-grow">
@@ -112,13 +168,16 @@ export default function CommentSection({ videoId }) {
           {comments.map((comment) => (
             <div key={comment.id} className="flex space-x-4">
               <Avatar>
-                <AvatarImage src={`/placeholder-avatar.jpg`} alt={comment.user} />
+                <AvatarImage
+                  src={comment.profilePicture ? comment.profilePicture : ""}
+                  alt={comment.user}
+                />
                 <AvatarFallback>{comment.user[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-grow">
                 <p className="font-semibold">{comment.user}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {new Date(comment.timestamp).toLocaleString()}
+                  {new Date(comment.createdAt).toLocaleString()}
                 </p>
                 <p className="mt-2">{comment.content}</p>
                 <div className="flex items-center space-x-4 mt-2">
@@ -134,6 +193,15 @@ export default function CommentSection({ videoId }) {
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
                   </Button>
+                  {comment.user === userName && ( // Show delete button only for the current user's comments
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteComment(comment.id)}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -146,5 +214,5 @@ export default function CommentSection({ videoId }) {
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }

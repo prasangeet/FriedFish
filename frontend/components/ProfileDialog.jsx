@@ -22,9 +22,7 @@ export default function ProfileDialog({
   fetchUserDetails,
 }) {
   const [displayName, setDisplayName] = useState(user?.displayName || "");
-  const [profilePicture, setProfilePicture] = useState(
-    user?.profilePicture || null
-  );
+  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || "default_image_url"); // Default image URL
   const [profileUpdateProgress, setProfileUpdateProgress] = useState(0);
   const fileInputRef = useRef(null);
 
@@ -76,10 +74,14 @@ export default function ProfileDialog({
       });
 
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Failed to update profile:", errorData);
         throw new Error("Failed to update profile");
       }
 
       const updatedUser = await response.json();
+      setDisplayName(updatedUser.displayName); // Update state after success
+      setProfilePicture(updatedUser.profilePicture);
       fetchUserDetails(uid);
       onOpenChange(false);
       setProfileUpdateProgress(0);

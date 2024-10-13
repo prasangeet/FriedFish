@@ -1,17 +1,17 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { auth } from '../../firebase.js'
-import { onAuthStateChanged } from 'firebase/auth'
-import Layout from '@/components/Layout'
-import Sidebar from '@/components/Sidebar'
-import Header from '@/components/Header'
-import MainContent from '@/components/MainContent'
-import ProfileDialog from '@/components/ProfileDialog'
-import UploadDialog from '@/components/UploadDialog'
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { auth } from "../../firebase.js";
+import { onAuthStateChanged } from "firebase/auth";
+import Layout from "@/components/Layout";
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
+import MainContent from "@/components/MainContent";
+import ProfileDialog from "@/components/ProfileDialog";
+import UploadDialog from "@/components/UploadDialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const neonColors = {
   blue: { primary: "#3b82f6", secondary: "#60a5fa" },
@@ -21,42 +21,42 @@ const neonColors = {
 };
 
 export default function Dashboard() {
-  const router = useRouter()
-  const [darkMode, setDarkMode] = useState(false)
-  const [user, setUser] = useState(null)
-  const [uid, setUid] = useState(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
-  const [neonColor, setNeonColor] = useState('blue')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [videos, setVideos] = useState([])
-  const [showAlert, setShowAlert] = useState(false)
+  const router = useRouter();
+  const [darkMode, setDarkMode] = useState(false);
+  const [user, setUser] = useState(null);
+  const [uid, setUid] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [neonColor, setNeonColor] = useState("blue");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [videos, setVideos] = useState([]);
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
-    const isDarkMode = localStorage.getItem('darkMode') === 'true'
-    setDarkMode(isDarkMode)
-    document.documentElement.classList.toggle('dark', isDarkMode)
+    const isDarkMode = localStorage.getItem("darkMode") === "true";
+    setDarkMode(isDarkMode);
+    document.documentElement.classList.toggle("dark", isDarkMode);
 
-    const savedNeonColor = localStorage.getItem('neonColor') || 'blue'
-    setNeonColor(savedNeonColor)
+    const savedNeonColor = localStorage.getItem("neonColor") || "blue";
+    setNeonColor(savedNeonColor);
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        console.log('User is authenticated:', currentUser)
-        console.log('UID:', currentUser.uid)
-        setUid(currentUser.uid)
-        fetchUserDetails(currentUser.uid)
+        console.log("User is authenticated:", currentUser);
+        console.log("UID:", currentUser.uid);
+        setUid(currentUser.uid);
+        fetchUserDetails(currentUser.uid);
       } else {
-        console.log('No user is signed in.')
-        setUid(null)
-        setUser(null)
+        console.log("No user is signed in.");
+        setUid(null);
+        setUser(null);
       }
-    })
+    });
 
-    fetchVideos()
+    fetchVideos();
 
-    return () => unsubscribe()
-  }, [])
+    return () => unsubscribe();
+  }, []);
 
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -85,70 +85,74 @@ export default function Dashboard() {
 
   const fetchUserDetails = async (uid) => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:5000/api/profile/${uid}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
+  
       if (response.status === 401) {
-        handleInvalidToken()
-        return
+        handleInvalidToken();
+        return;
       }
+  
       if (!response.ok) {
-        throw new Error('Failed to fetch user details')
+        throw new Error("Failed to fetch user details");
       }
-      const data = await response.json()
-      setUser(data)
+  
+      const data = await response.json();
+      console.log("Fetched user details:", data); // Debugging line
+      setUser(data);
     } catch (error) {
-      console.error('Error fetching user details:', error)
+      console.error("Error fetching user details:", error);
     }
-  }
+  };
 
   const fetchVideos = async () => {
-    const token = localStorage.getItem('token')
-    const response = await fetch('http://localhost:5000/api/videos', {
+    const token = localStorage.getItem("token");
+    const response = await fetch("http://localhost:5000/api/videos", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    })
+    });
 
     if (response.status === 401) {
-      handleInvalidToken()
-      return
+      handleInvalidToken();
+      return;
     }
     if (response.ok) {
-      const data = await response.json()
-      setVideos(data)
+      const data = await response.json();
+      setVideos(data);
     } else {
-      console.error('Failed to fetch videos')
+      console.error("Failed to fetch videos");
     }
-  }
+  };
 
   const handleInvalidToken = () => {
-    setShowAlert(true)
+    setShowAlert(true);
     setTimeout(() => {
-      router.push('/')
-    }, 3000)
-  }
+      router.push("/");
+    }, 3000);
+  };
 
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode
-    setDarkMode(newDarkMode)
-    localStorage.setItem('darkMode', newDarkMode.toString())
-    document.documentElement.classList.toggle('dark', newDarkMode)
-  }
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem("darkMode", newDarkMode.toString());
+    document.documentElement.classList.toggle("dark", newDarkMode);
+  };
 
   const changeNeonColor = (color) => {
-    setNeonColor(color)
-    localStorage.setItem('neonColor', color)
-  }
+    setNeonColor(color);
+    localStorage.setItem("neonColor", color);
+  };
 
   const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen)
-  }
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   return (
     <Layout darkMode={darkMode}>
@@ -191,5 +195,5 @@ export default function Dashboard() {
         </div>
       )}
     </Layout>
-  )
+  );
 }
