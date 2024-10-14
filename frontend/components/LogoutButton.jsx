@@ -3,7 +3,6 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { auth } from "@/firebase"; // Import your Firebase auth instance
 import { signOut } from "firebase/auth"; // Import signOut function
 

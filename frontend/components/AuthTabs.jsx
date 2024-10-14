@@ -9,8 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/firebase";
 import { Eye, EyeOff } from "lucide-react";
 
 const AuthTabs = () => {
@@ -29,7 +27,7 @@ const AuthTabs = () => {
     setProgress(0);
     try {
       setProgress(20);
-      const response = await fetch("http://localhost:5000/api/auth/signup", {
+      const response = await fetch("https://friedfish-backend-eyynmdxae-prasangeets-projects.vercel.app/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,15 +43,15 @@ const AuthTabs = () => {
 
         // Sign in the user with Firebase
         setProgress(60);
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        // const userCredential = await signInWithEmailAndPassword(
+        //   auth,
+        //   email,
+        //   password
+        // );
 
         setProgress(80);
         const loginResponse = await fetch(
-          "http://localhost:5000/api/auth/login",
+          "https://friedfish-backend.vercel.app/api/auth/login",
           {
             method: "POST",
             headers: {
@@ -90,13 +88,13 @@ const AuthTabs = () => {
     setProgress(0);
     try {
       setProgress(33);
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      // const userCredential = await signInWithEmailAndPassword(
+      //   auth,
+      //   email,
+      //   password
+      // );
       setProgress(66);
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch("https://friedfish-backend.vercel.app/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

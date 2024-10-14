@@ -17,7 +17,7 @@ export default function MainContent({ videos }) {
             </p>
             <p className="text-sm md:text-base text-gray-700 dark:text-gray-300">
               Get started by browsing through our curated collection of videos
-              below. Don't forget to bookmark your favorites for easy access
+              below. Don&apos;t forget to bookmark your favorites for easy access
               later!
             </p>
           </CardContent>

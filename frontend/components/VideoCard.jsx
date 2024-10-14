@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PlayIcon } from "lucide-react";
 import { db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import Image from "next/image";
 
 const VideoCard = ({ id, title, thumbnail, duration, views, userId }) => {
   const [displayName, setDisplayName] = useState("");
@@ -36,7 +37,7 @@ const VideoCard = ({ id, title, thumbnail, duration, views, userId }) => {
       onClick={handleClick}
     >
       <div className="relative">
-        <img src={thumbnail} alt={title} className="w-full h-40 object-cover" />
+        <Image src={thumbnail} alt={title} className="w-full h-40 object-cover" width={1000} height={1000}/>
         <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
           {duration}
         </div>

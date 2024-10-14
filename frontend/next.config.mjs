@@ -5,8 +5,12 @@ const nextConfig = {
         layers: true, // Enable layers experiment
         asyncWebAssembly: true, // If you need async WebAssembly support
       };
+    
   
       return config;
+    },
+    images: {
+      domains: ['firebasestorage.googleapis.com'],
     },
   };
   

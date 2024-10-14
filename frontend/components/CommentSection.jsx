@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +21,28 @@ export default function CommentSection({ videoId }) {
   const [userName, setUserName] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [userId, setUserId] = useState("");
+
+  const fetchComments = useCallback( async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/videos/${videoId}/comments`
+      );
+  
+      if (response.ok) {
+        const data = await response.json();
+        // Sort comments by createdAt in descending order
+        const sortedComments = data.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setComments(sortedComments);
+        console.log("Fetched comments:", sortedComments);
+      } else {
+        console.log("Failed to load comments:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  }, [videoId]);
 
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -46,29 +68,8 @@ export default function CommentSection({ videoId }) {
     };
     fetchDisplayName();
     fetchComments();
-  }, [userId, videoId]);
+  }, [userId, videoId, fetchComments]);
 
-  const fetchComments = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/videos/${videoId}/comments`
-      );
-  
-      if (response.ok) {
-        const data = await response.json();
-        // Sort comments by createdAt in descending order
-        const sortedComments = data.sort((a, b) => 
-          new Date(b.createdAt) - new Date(a.createdAt)
-        );
-        setComments(sortedComments);
-        console.log("Fetched comments:", sortedComments);
-      } else {
-        console.log("Failed to load comments:", response.statusText);
-      }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-    }
-  };
   
   const handleSubmitComment = async (e) => {
     e.preventDefault();

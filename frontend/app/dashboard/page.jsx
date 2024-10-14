@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "../../firebase.js";
 import { onAuthStateChanged } from "firebase/auth";
@@ -32,6 +32,61 @@ export default function Dashboard() {
   const [videos, setVideos] = useState([]);
   const [showAlert, setShowAlert] = useState(false);
 
+  const handleInvalidToken = useCallback(() => {
+    setShowAlert(true);
+    setTimeout(() => {
+      router.push("/");
+    }, 3000);
+  }, [router]);
+
+  const fetchUserDetails = useCallback(async (uid) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:5000/api/profile/${uid}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        handleInvalidToken();
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user details");
+      }
+
+      const data = await response.json();
+      console.log("Fetched user details:", data); // Debugging line
+      setUser(data);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  }, [handleInvalidToken]);
+
+  const fetchVideos = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch("http://localhost:5000/api/videos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 401) {
+      handleInvalidToken();
+      return;
+    }
+    if (response.ok) {
+      const data = await response.json();
+      setVideos(data);
+    } else {
+      console.error("Failed to fetch videos");
+    }
+  }, [handleInvalidToken]);
+
   useEffect(() => {
     const isDarkMode = localStorage.getItem("darkMode") === "true";
     setDarkMode(isDarkMode);
@@ -56,7 +111,7 @@ export default function Dashboard() {
     fetchVideos();
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchUserDetails, fetchVideos]);
 
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -83,60 +138,7 @@ export default function Dashboard() {
     );
   }, [neonColor]);
 
-  const fetchUserDetails = async (uid) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/profile/${uid}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
   
-      if (response.status === 401) {
-        handleInvalidToken();
-        return;
-      }
-  
-      if (!response.ok) {
-        throw new Error("Failed to fetch user details");
-      }
-  
-      const data = await response.json();
-      console.log("Fetched user details:", data); // Debugging line
-      setUser(data);
-    } catch (error) {
-      console.error("Error fetching user details:", error);
-    }
-  };
-
-  const fetchVideos = async () => {
-    const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:5000/api/videos", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 401) {
-      handleInvalidToken();
-      return;
-    }
-    if (response.ok) {
-      const data = await response.json();
-      setVideos(data);
-    } else {
-      console.error("Failed to fetch videos");
-    }
-  };
-
-  const handleInvalidToken = () => {
-    setShowAlert(true);
-    setTimeout(() => {
-      router.push("/");
-    }, 3000);
-  };
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;

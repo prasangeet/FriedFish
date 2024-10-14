@@ -22,3 +22,4 @@ serviceAccountKey.json
 .vscode/
 *.sublime-project
 *.sublime-workspace
+.vercel

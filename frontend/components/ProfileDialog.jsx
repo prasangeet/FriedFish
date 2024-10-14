@@ -22,7 +22,9 @@ export default function ProfileDialog({
   fetchUserDetails,
 }) {
   const [displayName, setDisplayName] = useState(user?.displayName || "");
-  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || "default_image_url"); // Default image URL
+  const [profilePicture, setProfilePicture] = useState(
+    user?.profilePicture || ""
+  ); // Default image URL
   const [profileUpdateProgress, setProfileUpdateProgress] = useState(0);
   const fileInputRef = useRef(null);
 
@@ -100,7 +102,7 @@ export default function ProfileDialog({
             Edit profile
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">
-            Make changes to your profile here. Click save when you're done.
+            Make changes to your profile here. Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSaveProfile}>
@@ -127,7 +129,7 @@ export default function ProfileDialog({
                 <Avatar className="h-24 w-24 border-2 neon-border">
                   <AvatarImage src={profilePicture} alt="Profile Picture" />
                   <AvatarFallback>
-                    {displayName?.charAt(0) || "U"}
+                    {user?.displayName?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full">

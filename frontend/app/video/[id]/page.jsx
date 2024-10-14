@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import { auth } from '../../../firebase.js'
@@ -34,39 +34,7 @@ export default function VideoPage() {
   const [showAlert, setShowAlert] = useState(false)
   const [featuredVideos, setFeaturedVideos] = useState([])
 
-  useEffect(() => {
-    console.log('Params:', params);
   
-    const isDarkMode = localStorage.getItem('darkMode') === 'true'
-    setDarkMode(isDarkMode)
-    document.documentElement.classList.toggle('dark', isDarkMode)
-  
-    const savedNeonColor = localStorage.getItem('neonColor') || 'blue'
-    setNeonColor(savedNeonColor)
-  
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        console.log('User is authenticated:', currentUser)
-        console.log('UID:', currentUser.uid)
-        setUid(currentUser.uid)
-        fetchUserDetails(currentUser.uid)
-      } else {
-        console.log('No user is signed in.')
-        setUid(null)
-        setUser(null)
-      }
-    })
-  
-    if (params?.id) {
-      fetchVideo(params.id)
-    } else {
-      console.error('Video ID is undefined')
-    }
-
-    fetchFeaturedVideos()
-  
-    return () => unsubscribe()
-  }, [params])
 
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -92,8 +60,15 @@ export default function VideoPage() {
       hexToRgb(neonColors[neonColor].primary)
     );
   }, [neonColor]);
+  
+  const handleInvalidToken = useCallback(() => { // Convert to useCallback to maintain reference
+    setShowAlert(true)
+    setTimeout(() => {
+      router.push('/')
+    }, 3000)
+  }, [router]);
 
-  const fetchUserDetails = async (uid) => {
+  const fetchUserDetails = useCallback(async (uid) => {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`http://localhost:5000/api/profile/${uid}`, {
@@ -115,9 +90,10 @@ export default function VideoPage() {
     } catch (error) {
       console.error('Error fetching user details:', error)
     }
-  }
+  }, [handleInvalidToken]);
+  
 
-  const fetchVideo = async (id) => {
+  const fetchVideo = useCallback(async (id) => {
     const token = localStorage.getItem('token')
     const response = await fetch(`http://localhost:5000/api/videos/${id}`, {
       headers: {
@@ -135,9 +111,9 @@ export default function VideoPage() {
     } else {
       console.error('Failed to fetch video')
     }
-  }
+  }, [handleInvalidToken]); // Add handleInvalidToken to the dependency array
 
-  const fetchFeaturedVideos = async () => {
+  const fetchFeaturedVideos = useCallback(async () => {
     const token = localStorage.getItem('token')
     const response = await fetch('http://localhost:5000/api/videos/', {
       headers: {
@@ -155,14 +131,42 @@ export default function VideoPage() {
     } else {
       console.error('Failed to fetch featured videos')
     }
-  }
+  }, [handleInvalidToken]); // Add handleInvalidToken to the dependency array
 
-  const handleInvalidToken = () => {
-    setShowAlert(true)
-    setTimeout(() => {
-      router.push('/')
-    }, 3000)
-  }
+  
+  useEffect(() => {
+    console.log('Params:', params);
+
+    const isDarkMode = localStorage.getItem('darkMode') === 'true'
+    setDarkMode(isDarkMode)
+    document.documentElement.classList.toggle('dark', isDarkMode)
+
+    const savedNeonColor = localStorage.getItem('neonColor') || 'blue'
+    setNeonColor(savedNeonColor)
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        console.log('User is authenticated:', currentUser)
+        console.log('UID:', currentUser.uid)
+        setUid(currentUser.uid)
+        fetchUserDetails(currentUser.uid)
+      } else {
+        console.log('No user is signed in.')
+        setUid(null)
+        setUser(null)
+      }
+    })
+
+    if (params?.id) {
+      fetchVideo(params.id)
+    } else {
+      console.error('Video ID is undefined')
+    }
+
+    fetchFeaturedVideos()
+
+    return () => unsubscribe()
+  }, [params, fetchVideo, fetchFeaturedVideos, fetchUserDetails]); // Add router to the dependency array
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode

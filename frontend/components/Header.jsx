@@ -27,7 +27,6 @@ import LogoutButton from '@/components/LogoutButton'
 export default function Header({
   darkMode,
   toggleDarkMode,
-  neonColor,
   changeNeonColor,
   user,
   setDialogOpen,

@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle, Upload, X } from 'lucide-react'
+import Image from 'next/image'
 
 export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
   const [videoTitle, setVideoTitle] = useState('')
@@ -196,10 +197,12 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
                 </Button>
                 {videoThumbnail && (
                   <div className="mt-2 relative">
-                    <img
+                    <Image
                       src={videoThumbnail}
                       alt="Video Thumbnail"
                       className="w-full h-32 object-cover rounded-md"
+                      height={500}
+                      width={500}
                     />
                     <Button
                       type="button"
