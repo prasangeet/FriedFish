@@ -15,8 +15,10 @@ const app = express();
 
 app.use(cors({
   origin: 'http://localhost:3000', // Allow your frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 app.use(bodyParser.json());
