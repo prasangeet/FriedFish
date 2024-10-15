@@ -88,8 +88,9 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to upload video')
-      }
+        const errorResult = await response.json();
+        throw new Error(errorResult.message || 'Failed to upload video');
+      }      
 
       const result = await response.json()
       console.log('Video successfully uploaded:', result)
