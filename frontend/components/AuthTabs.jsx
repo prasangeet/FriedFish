@@ -22,7 +22,7 @@ const AuthTabs = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const router = useRouter();
-  const API_ROUTE_LOCAL = "http://localhost:5000/api"
+  const API_ROUTE_LOCAL = "https://fried-fish.vercel.app/api"
 
   const handleSignUp = async (e) => {
     e.preventDefault();

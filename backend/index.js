@@ -14,7 +14,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: '*', // Change back after debugging
+  origin: 'http://localhost:3000', // Allow your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
@@ -35,6 +35,13 @@ app.use("/api/videos", commentRoutes);
 //protectedRoute
 app.get('/api/protected', authMiddleware, (req, res) => {
   res.send({ message: 'This is a protected route', uid: req.user.uid });
+});
+
+app.use((err, req, res, next) => {
+  if (err instanceof cors.CorsError) {
+    return res.status(403).json({ error: 'CORS error: ' + err.message });
+  }
+  next(err);
 });
 
 const PORT = process.env.PORT || 5000;
