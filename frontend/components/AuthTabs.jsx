@@ -20,6 +20,7 @@ const AuthTabs = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const router = useRouter();
+  const API_ROUTE_LOCAL = "http://localhost:5000/api"
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -27,7 +28,7 @@ const AuthTabs = () => {
     setProgress(0);
     try {
       setProgress(20);
-      const response = await fetch("https://friedfish-backend-eyynmdxae-prasangeets-projects.vercel.app/api/auth/signup", {
+      const response = await fetch(`${API_ROUTE_LOCAL}/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +52,7 @@ const AuthTabs = () => {
 
         setProgress(80);
         const loginResponse = await fetch(
-          "https://friedfish-backend.vercel.app/api/auth/login",
+          `${API_ROUTE_LOCAL}/auth/login`,
           {
             method: "POST",
             headers: {
@@ -94,7 +95,7 @@ const AuthTabs = () => {
       //   password
       // );
       setProgress(66);
-      const response = await fetch("https://friedfish-backend.vercel.app/api/auth/login", {
+      const response = await fetch(`${API_ROUTE_LOCAL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

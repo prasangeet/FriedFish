@@ -37,7 +37,7 @@ const VideoCard = ({ id, title, thumbnail, duration, views, userId }) => {
       onClick={handleClick}
     >
       <div className="relative">
-        <Image src={thumbnail} alt={title} className="w-full h-40 object-cover" width={1000} height={1000}/>
+        <Image src={thumbnail} alt={title} className="w-full h-40 object-cover" width={1000} height={1000} priority={true}/>
         <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
           {duration}
         </div>
