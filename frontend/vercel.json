@@ -1,3 +1,21 @@
 {
-  "framework": "nextjs"
-}
+    "version": 2,
+    "builds": [
+      {
+        "src": "next.config.js",
+        "use": "@vercel/next"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "https://fried-fish.vercel.app/api/$1", 
+        "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        "headers": {
+          "Access-Control-Allow-Origin": "https://friedfish.vercel.app",
+          "Access-Control-Allow-Credentials": "true"
+        }
+      }
+    ]
+  }
+  
