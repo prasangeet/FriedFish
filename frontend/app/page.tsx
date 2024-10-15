@@ -12,13 +12,14 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
 
   useEffect(() => {
     const checkTokenValidity = async () => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await fetch("http://localhost:5000/api/verify-token", {
+          const response = await fetch(`${API_ROUTE_GLOBAL}/verify-token`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${token}`

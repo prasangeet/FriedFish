@@ -33,6 +33,7 @@ export default function VideoPage() {
   const [video, setVideo] = useState(null)
   const [showAlert, setShowAlert] = useState(false)
   const [featuredVideos, setFeaturedVideos] = useState([])
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
 
   
 
@@ -71,7 +72,7 @@ export default function VideoPage() {
   const fetchUserDetails = useCallback(async (uid) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/profile/${uid}`, {
+      const response = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +96,7 @@ export default function VideoPage() {
 
   const fetchVideo = useCallback(async (id) => {
     const token = localStorage.getItem('token')
-    const response = await fetch(`http://localhost:5000/api/videos/${id}`, {
+    const response = await fetch(`${API_ROUTE_GLOBAL}/videos/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -115,7 +116,7 @@ export default function VideoPage() {
 
   const fetchFeaturedVideos = useCallback(async () => {
     const token = localStorage.getItem('token')
-    const response = await fetch('http://localhost:5000/api/videos/', {
+    const response = await fetch(`${API_ROUTE_GLOBAL}/videos/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

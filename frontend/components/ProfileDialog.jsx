@@ -21,6 +21,7 @@ export default function ProfileDialog({
   uid,
   fetchUserDetails,
 }) {
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [profilePicture, setProfilePicture] = useState(
     user?.profilePicture || ""
@@ -67,7 +68,7 @@ export default function ProfileDialog({
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      const response = await fetch(`http://localhost:5000/api/profile/${uid}`, {
+      const response = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

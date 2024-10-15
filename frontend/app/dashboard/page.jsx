@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [videos, setVideos] = useState([]);
   const [showAlert, setShowAlert] = useState(false);
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
 
   const handleInvalidToken = useCallback(() => {
     setShowAlert(true);
@@ -42,7 +43,7 @@ export default function Dashboard() {
   const fetchUserDetails = useCallback(async (uid) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/profile/${uid}`, {
+      const response = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +70,7 @@ export default function Dashboard() {
 
   const fetchVideos = useCallback(async () => {
     const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:5000/api/videos", {
+    const response = await fetch(`${API_ROUTE_GLOBAL}/videos`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

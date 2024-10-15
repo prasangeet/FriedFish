@@ -26,6 +26,7 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
   const [isUploading, setIsUploading] = useState(false)
   const thumbnailInputRef = useRef(null)
   const videoInputRef = useRef(null)
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
 
   const handleThumbnailChange = (event) => {
     const file = event.target.files[0]
@@ -78,7 +79,7 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
       formData.append('thumbnail', thumbnailInputRef.current.files[0])
       formData.append('video', videoInputRef.current.files[0])
 
-      const response = await fetch('http://localhost:5000/api/videos/upload', {
+      const response = await fetch(`${API_ROUTE_GLOBAL}/videos/upload`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

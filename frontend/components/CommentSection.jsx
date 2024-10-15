@@ -21,11 +21,12 @@ export default function CommentSection({ videoId }) {
   const [userName, setUserName] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [userId, setUserId] = useState("");
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
 
   const fetchComments = useCallback( async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/videos/${videoId}/comments`
+        `${API_ROUTE_GLOBAL}/videos/${videoId}/comments`
       );
   
       if (response.ok) {
@@ -85,7 +86,7 @@ export default function CommentSection({ videoId }) {
       console.log(userName);
 
       const response = await fetch(
-        `http://localhost:5000/api/videos/${videoId}/comments`,
+        `${API_ROUTE_GLOBAL}/videos/${videoId}/comments`,
         {
           method: "POST",
           headers: {
@@ -116,7 +117,7 @@ export default function CommentSection({ videoId }) {
   const handleDeleteComment = async (commentId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/videos/${videoId}/comments/${commentId}`,
+        `${API_ROUTE_GLOBAL}/videos/${videoId}/comments/${commentId}`,
         {
           method: "DELETE",
           headers: {
