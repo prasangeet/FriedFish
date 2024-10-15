@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebase";
 
 const AuthTabs = () => {
   const [email, setEmail] = useState("");
@@ -44,11 +46,13 @@ const AuthTabs = () => {
 
         // Sign in the user with Firebase
         setProgress(60);
-        // const userCredential = await signInWithEmailAndPassword(
-        //   auth,
-        //   email,
-        //   password
-        // );
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        console.log(userCredential.user);
+        
 
         setProgress(80);
         const loginResponse = await fetch(
@@ -89,11 +93,13 @@ const AuthTabs = () => {
     setProgress(0);
     try {
       setProgress(33);
-      // const userCredential = await signInWithEmailAndPassword(
-      //   auth,
-      //   email,
-      //   password
-      // );
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log(userCredential.user);
+
       setProgress(66);
       const response = await fetch(`${API_ROUTE_LOCAL}/auth/login`, {
         method: "POST",

@@ -1,5 +1,5 @@
 import express from "express";
-import { admin, db } from "../config/firebase.js";
+import { admin, auth, db } from "../config/firebase.js";
 import jwt from "jsonwebtoken";
 import authMiddleware from "../middleware/auth.js";
 import axios from "axios";

@@ -96,6 +96,7 @@ export default function Dashboard() {
     setNeonColor(savedNeonColor);
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      console.log("Auth state changed:", currentUser);
       if (currentUser) {
         console.log("User is authenticated:", currentUser);
         console.log("UID:", currentUser.uid);
