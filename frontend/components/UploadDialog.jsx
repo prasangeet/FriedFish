@@ -93,7 +93,6 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
 
       // If local API fails, try the global API
       if (!response.ok) {
-        const errorResult = await response.json();
         // Attempt the global API
         const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos/upload`, {
           method: 'POST',
