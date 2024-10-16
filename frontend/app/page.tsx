@@ -23,30 +23,32 @@ export default function Home() {
       if (token) {
         try {
           // Try the local API first
-          const response = await fetch(`${API_ROUTE_LOCAL}/verify-token`, {
+          const localResponse = await fetch(`${API_ROUTE_LOCAL}/verify-token`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${token}`,
             },
           });
-
+  
           // If the local API fails, try the global API
-          if (!response.ok) {
+          if (localResponse.ok) {
+            router.push("/dashboard");
+          } else {
+            // Check the global API only if local response is not OK
             const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/verify-token`, {
               method: "GET",
               headers: {
                 "Authorization": `Bearer ${token}`,
               },
             });
-            
+  
             if (globalResponse.ok) {
               router.push("/dashboard");
             } else {
+              // If both API calls fail, remove the token and set the error
               localStorage.removeItem("token");
               setError("Your session has expired. Please log in again.");
             }
-          } else {
-            router.push("/dashboard");
           }
         } catch (error) {
           console.error("Error verifying token:", error);
@@ -55,9 +57,10 @@ export default function Home() {
       }
       setIsLoading(false);
     };
-
+  
     checkTokenValidity();
   }, [router]);
+  
 
   useEffect(() => {
     const isDarkMode = localStorage.getItem("darkMode") === "true";
