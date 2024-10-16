@@ -21,14 +21,17 @@ export default function CommentSection({ videoId }) {
   const [userName, setUserName] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [userId, setUserId] = useState("");
-  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api";
+  const API_ROUTE_LOCAL = "http://localhost:3000/api";
 
-  const fetchComments = useCallback( async () => {
+  const fetchComments = useCallback(async () => {
     try {
-      const response = await fetch(
-        `${API_ROUTE_GLOBAL}/videos/${videoId}/comments`
-      );
-  
+      let response = await fetch(`${API_ROUTE_LOCAL}/videos/${videoId}/comments`);
+      
+      if (!response.ok) {
+        response = await fetch(`${API_ROUTE_GLOBAL}/videos/${videoId}/comments`);
+      }
+
       if (response.ok) {
         const data = await response.json();
         // Sort comments by createdAt in descending order
@@ -85,8 +88,9 @@ export default function CommentSection({ videoId }) {
     try {
       console.log(userName);
 
-      const response = await fetch(
-        `${API_ROUTE_GLOBAL}/videos/${videoId}/comments`,
+      // Try local API first
+      let response = await fetch(
+        `${API_ROUTE_LOCAL}/videos/${videoId}/comments`,
         {
           method: "POST",
           headers: {
@@ -97,10 +101,30 @@ export default function CommentSection({ videoId }) {
             content: newComment,
             user: userName,
             userId: userId,
-            profilePicture: profilePicture, // Send profile picture when posting comment
+            profilePicture: profilePicture,
           }),
         }
       );
+
+      // Fallback to global API if local fails
+      if (!response.ok) {
+        response = await fetch(
+          `${API_ROUTE_GLOBAL}/videos/${videoId}/comments`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              content: newComment,
+              user: userName,
+              userId: userId,
+              profilePicture: profilePicture,
+            }),
+          }
+        );
+      }
 
       if (response.ok) {
         setNewComment("");
@@ -110,14 +134,14 @@ export default function CommentSection({ videoId }) {
         console.error("Error posting comment:", errorData.error);
       }
     } catch (error) {
-      console.error("Error fetching user name:", error);
+      console.error("Error posting comment:", error);
     }
   };
 
   const handleDeleteComment = async (commentId) => {
     try {
-      const response = await fetch(
-        `${API_ROUTE_GLOBAL}/videos/${videoId}/comments/${commentId}`,
+      let response = await fetch(
+        `${API_ROUTE_LOCAL}/videos/${videoId}/comments/${commentId}`,
         {
           method: "DELETE",
           headers: {
@@ -126,6 +150,19 @@ export default function CommentSection({ videoId }) {
           },
         }
       );
+
+      if (!response.ok) {
+        response = await fetch(
+          `${API_ROUTE_GLOBAL}/videos/${videoId}/comments/${commentId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+      }
 
       if (response.ok) {
         // Refresh comments after deletion

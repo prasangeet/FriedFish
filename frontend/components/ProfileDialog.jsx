@@ -21,7 +21,8 @@ export default function ProfileDialog({
   uid,
   fetchUserDetails,
 }) {
-  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api";
+  const API_ROUTE_LOCAL = "http://localhost:3000/api"; // Add your local API route
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [profilePicture, setProfilePicture] = useState(
     user?.profilePicture || ""
@@ -68,13 +69,25 @@ export default function ProfileDialog({
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      const response = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
+      // Try local API first for updating the profile
+      let response = await fetch(`${API_ROUTE_LOCAL}/profile/${uid}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
+
+      // Fallback to global API if local fails
+      if (!response.ok) {
+        response = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+      }
 
       if (!response.ok) {
         const errorData = await response.json();

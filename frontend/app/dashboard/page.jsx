@@ -31,7 +31,8 @@ export default function Dashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [videos, setVideos] = useState([]);
   const [showAlert, setShowAlert] = useState(false);
-  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
+  const API_ROUTE_LOCAL = "http://localhost:5000/api";
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api";
 
   const handleInvalidToken = useCallback(() => {
     setShowAlert(true);
@@ -43,50 +44,61 @@ export default function Dashboard() {
   const fetchUserDetails = useCallback(async (uid) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
+      const response = await fetch(`${API_ROUTE_LOCAL}/profile/${uid}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (response.status === 401) {
-        handleInvalidToken();
-        return;
-      }
-
+  
       if (!response.ok) {
-        throw new Error("Failed to fetch user details");
+        const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!globalResponse.ok) throw new Error("Failed to fetch user details");
+        const data = await globalResponse.json();
+        setUser(data);
+      } else {
+        const data = await response.json();
+        setUser(data);
       }
-
-      const data = await response.json();
-      console.log("Fetched user details:", data); // Debugging line
-      setUser(data);
     } catch (error) {
       console.error("Error fetching user details:", error);
     }
   }, [handleInvalidToken]);
+  
 
   const fetchVideos = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${API_ROUTE_GLOBAL}/videos`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 401) {
-      handleInvalidToken();
-      return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_ROUTE_LOCAL}/videos`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!globalResponse.ok) throw new Error("Failed to fetch videos");
+        const data = await globalResponse.json();
+        setVideos(data);
+      } else {
+        const data = await response.json();
+        setVideos(data);
+      }
+    } catch (error) {
+      console.error("Error fetching videos:", error);
     }
-    if (response.ok) {
-      const data = await response.json();
-      setVideos(data);
-    } else {
-      console.error("Failed to fetch videos");
-    }
-  }, [handleInvalidToken]);
+  }, [handleInvalidToken]);  
 
   useEffect(() => {
     const isDarkMode = localStorage.getItem("darkMode") === "true";
@@ -139,8 +151,6 @@ export default function Dashboard() {
       hexToRgb(neonColors[neonColor].primary)
     );
   }, [neonColor]);
-
-  
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;

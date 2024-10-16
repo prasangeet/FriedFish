@@ -1,19 +1,18 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { useParams } from 'next/navigation'
-import { auth } from '../../../firebase.js'
-import { onAuthStateChanged } from 'firebase/auth'
-import Layout from '@/components/Layout'
-import Header from '@/components/Header'
-import VideoPlayer from '@/components/VideoPlayer'
-import VideoDetails from '@/components/VideoDetails'
-import CommentSection from '@/components/CommentSection'
-import FeaturedVideos from '@/components/FeaturedVideos'
-import ProfileDialog from '@/components/ProfileDialog'
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { auth } from '../../../firebase.js';
+import { onAuthStateChanged } from 'firebase/auth';
+import Layout from '@/components/Layout';
+import Header from '@/components/Header';
+import VideoPlayer from '@/components/VideoPlayer';
+import VideoDetails from '@/components/VideoDetails';
+import CommentSection from '@/components/CommentSection';
+import FeaturedVideos from '@/components/FeaturedVideos';
+import ProfileDialog from '@/components/ProfileDialog';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const neonColors = {
   blue: { primary: "#3b82f6", secondary: "#60a5fa" },
@@ -23,163 +22,196 @@ const neonColors = {
 };
 
 export default function VideoPage() {
-  const router = useRouter()
-  const params = useParams()
-  const [darkMode, setDarkMode] = useState(false)
-  const [user, setUser] = useState(null)
-  const [uid, setUid] = useState(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [neonColor, setNeonColor] = useState('blue')
-  const [video, setVideo] = useState(null)
-  const [showAlert, setShowAlert] = useState(false)
-  const [featuredVideos, setFeaturedVideos] = useState([])
-  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
-
+  const router = useRouter();
+  const params = useParams();
+  const [darkMode, setDarkMode] = useState(false);
+  const [user, setUser] = useState(null);
+  const [uid, setUid] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [neonColor, setNeonColor] = useState('blue');
+  const [video, setVideo] = useState(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const [featuredVideos, setFeaturedVideos] = useState([]);
   
+  // Define API routes
+  const API_ROUTE_LOCAL = "http://localhost:5000/api"; // Local API URL
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"; // Global API URL
 
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
-      ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(
-          result[3],
-          16
-        )}`
+      ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}`
       : null;
   };
 
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--neon-primary",
-      neonColors[neonColor].primary
-    );
-    document.documentElement.style.setProperty(
-      "--neon-secondary",
-      neonColors[neonColor].secondary
-    );
-    document.documentElement.style.setProperty(
-      "--neon-primary-rgb",
-      hexToRgb(neonColors[neonColor].primary)
-    );
+    document.documentElement.style.setProperty("--neon-primary", neonColors[neonColor].primary);
+    document.documentElement.style.setProperty("--neon-secondary", neonColors[neonColor].secondary);
+    document.documentElement.style.setProperty("--neon-primary-rgb", hexToRgb(neonColors[neonColor].primary));
   }, [neonColor]);
-  
-  const handleInvalidToken = useCallback(() => { // Convert to useCallback to maintain reference
-    setShowAlert(true)
+
+  const handleInvalidToken = useCallback(() => {
+    setShowAlert(true);
     setTimeout(() => {
-      router.push('/')
-    }, 3000)
+      router.push('/');
+    }, 3000);
   }, [router]);
 
   const fetchUserDetails = useCallback(async (uid) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_ROUTE_LOCAL}/profile/${uid}`, { // Try local API first
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
+
+      // If local fails, try global API
       if (response.status === 401) {
-        handleInvalidToken()
-        return
+        handleInvalidToken();
+        return;
       }
       if (!response.ok) {
-        throw new Error('Failed to fetch user details')
+        const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, { // Global API fallback
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (globalResponse.status === 401) {
+          handleInvalidToken();
+          return;
+        }
+        if (!globalResponse.ok) {
+          throw new Error('Failed to fetch user details from global API');
+        }
+        const globalData = await globalResponse.json();
+        setUser(globalData);
+      } else {
+        const data = await response.json();
+        setUser(data);
       }
-      const data = await response.json()
-      setUser(data)
     } catch (error) {
-      console.error('Error fetching user details:', error)
+      console.error('Error fetching user details:', error);
     }
   }, [handleInvalidToken]);
-  
 
   const fetchVideo = useCallback(async (id) => {
-    const token = localStorage.getItem('token')
-    const response = await fetch(`${API_ROUTE_GLOBAL}/videos/${id}`, {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_ROUTE_LOCAL}/videos/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    })
+    });
 
+    // If local fails, try global API
     if (response.status === 401) {
-      handleInvalidToken()
-      return
+      handleInvalidToken();
+      return;
     }
     if (response.ok) {
-      const data = await response.json()
-      setVideo(data)
+      const data = await response.json();
+      setVideo(data);
     } else {
-      console.error('Failed to fetch video')
+      const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (globalResponse.status === 401) {
+        handleInvalidToken();
+        return;
+      }
+      if (globalResponse.ok) {
+        const data = await globalResponse.json();
+        setVideo(data);
+      } else {
+        console.error('Failed to fetch video from global API');
+      }
     }
-  }, [handleInvalidToken]); // Add handleInvalidToken to the dependency array
+  }, [handleInvalidToken]);
 
   const fetchFeaturedVideos = useCallback(async () => {
-    const token = localStorage.getItem('token')
-    const response = await fetch(`${API_ROUTE_GLOBAL}/videos/`, {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_ROUTE_LOCAL}/videos/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    })
+    });
 
+    // If local fails, try global API
     if (response.status === 401) {
-      handleInvalidToken()
-      return
+      handleInvalidToken();
+      return;
     }
     if (response.ok) {
-      const data = await response.json()
-      setFeaturedVideos(data)
+      const data = await response.json();
+      setFeaturedVideos(data);
     } else {
-      console.error('Failed to fetch featured videos')
+      const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (globalResponse.status === 401) {
+        handleInvalidToken();
+        return;
+      }
+      if (globalResponse.ok) {
+        const data = await globalResponse.json();
+        setFeaturedVideos(data);
+      } else {
+        console.error('Failed to fetch featured videos from global API');
+      }
     }
-  }, [handleInvalidToken]); // Add handleInvalidToken to the dependency array
+  }, [handleInvalidToken]);
 
-  
   useEffect(() => {
-    console.log('Params:', params);
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    setDarkMode(isDarkMode);
+    document.documentElement.classList.toggle('dark', isDarkMode);
 
-    const isDarkMode = localStorage.getItem('darkMode') === 'true'
-    setDarkMode(isDarkMode)
-    document.documentElement.classList.toggle('dark', isDarkMode)
-
-    const savedNeonColor = localStorage.getItem('neonColor') || 'blue'
-    setNeonColor(savedNeonColor)
+    const savedNeonColor = localStorage.getItem('neonColor') || 'blue';
+    setNeonColor(savedNeonColor);
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        console.log('User is authenticated:', currentUser)
-        console.log('UID:', currentUser.uid)
-        setUid(currentUser.uid)
-        fetchUserDetails(currentUser.uid)
+        setUid(currentUser.uid);
+        fetchUserDetails(currentUser.uid);
       } else {
-        console.log('No user is signed in.')
-        setUid(null)
-        setUser(null)
+        setUid(null);
+        setUser(null);
       }
-    })
+    });
 
     if (params?.id) {
-      fetchVideo(params.id)
+      fetchVideo(params.id);
     } else {
-      console.error('Video ID is undefined')
+      console.error('Video ID is undefined');
     }
 
-    fetchFeaturedVideos()
+    fetchFeaturedVideos();
 
-    return () => unsubscribe()
-  }, [params, fetchVideo, fetchFeaturedVideos, fetchUserDetails]); // Add router to the dependency array
+    return () => unsubscribe();
+  }, [params, fetchVideo, fetchFeaturedVideos, fetchUserDetails]);
 
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode
-    setDarkMode(newDarkMode)
-    localStorage.setItem('darkMode', newDarkMode.toString())
-    document.documentElement.classList.toggle('dark', newDarkMode)
-  }
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
+    document.documentElement.classList.toggle('dark', newDarkMode);
+  };
 
   const changeNeonColor = (color) => {
-    setNeonColor(color)
-    localStorage.setItem('neonColor', color)
-  }
+    setNeonColor(color);
+    localStorage.setItem('neonColor', color);
+  };
 
   return (
     <Layout darkMode={darkMode}>
@@ -192,7 +224,7 @@ export default function VideoPage() {
           user={user}
           setDialogOpen={setDialogOpen}
         />
-        <div className="flex-grow flex ">
+        <div className="flex-grow flex">
           <main className="flex-grow p-6">
             {video ? (
               <>
@@ -228,5 +260,5 @@ export default function VideoPage() {
         </div>
       )}
     </Layout>
-  )
+  );
 }

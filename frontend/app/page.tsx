@@ -12,26 +12,41 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
+  
+  // Define API routes
+  const API_ROUTE_LOCAL = "http://localhost:5000/api"; // Local API URL
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"; // Global API URL
 
   useEffect(() => {
     const checkTokenValidity = async () => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await fetch(`${API_ROUTE_GLOBAL}/verify-token`, {
+          // Try the local API first
+          const response = await fetch(`${API_ROUTE_LOCAL}/verify-token`, {
             method: "GET",
             headers: {
-              "Authorization": `Bearer ${token}`
-            }
+              "Authorization": `Bearer ${token}`,
+            },
           });
 
-          if (response.ok) {
-            router.push("/dashboard");
+          // If the local API fails, try the global API
+          if (!response.ok) {
+            const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/verify-token`, {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              },
+            });
+            
+            if (globalResponse.ok) {
+              router.push("/dashboard");
+            } else {
+              localStorage.removeItem("token");
+              setError("Your session has expired. Please log in again.");
+            }
           } else {
-            // Token is invalid, remove it from localStorage
-            localStorage.removeItem("token");
-            setError("Your session has expired. Please log in again.");
+            router.push("/dashboard");
           }
         } catch (error) {
           console.error("Error verifying token:", error);

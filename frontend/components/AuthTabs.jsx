@@ -22,8 +22,8 @@ const AuthTabs = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const router = useRouter();
-  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
-  // const API_ROUTE_LOCAL = "http:localhost:3000/api"
+  const API_ROUTE_LOCAL = "http://localhost:5000/api";
+  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api";
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -31,13 +31,24 @@ const AuthTabs = () => {
     setProgress(0);
     try {
       setProgress(20);
-      const response = await fetch(`${API_ROUTE_GLOBAL}/auth/signup`, {
+
+      let response = await fetch(`${API_ROUTE_LOCAL}/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password, displayName }),
       });
+
+      if (!response.ok) {
+        response = await fetch(`${API_ROUTE_GLOBAL}/auth/signup`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password, displayName }),
+        });
+      }
 
       const data = await response.json();
 
@@ -53,19 +64,25 @@ const AuthTabs = () => {
           password
         );
         console.log(userCredential.user);
-        
 
         setProgress(80);
-        const loginResponse = await fetch(
-          `${API_ROUTE_GLOBAL}/auth/login`,
-          {
+        let loginResponse = await fetch(`${API_ROUTE_LOCAL}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!loginResponse.ok) {
+          loginResponse = await fetch(`${API_ROUTE_GLOBAL}/auth/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ email, password }),
-          }
-        );
+          });
+        }
 
         const loginData = await loginResponse.json();
 
@@ -102,13 +119,23 @@ const AuthTabs = () => {
       console.log(userCredential.user);
 
       setProgress(66);
-      const response = await fetch(`${API_ROUTE_GLOBAL}/auth/login`, {
+      let response = await fetch(`${API_ROUTE_LOCAL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
+      
+      if (!response.ok) {
+        response = await fetch(`${API_ROUTE_GLOBAL}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+      }
 
       const data = await response.json();
 

@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { auth } from "@/firebase"; // Import your Firebase auth instance
 import { signOut } from "firebase/auth"; // Import signOut function
-const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
+
+const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api";
+const API_ROUTE_LOCAL = "http://localhost:5000/api"; // Add your local API route
 
 const LogoutButton = () => {
   const router = useRouter();
@@ -14,16 +16,31 @@ const LogoutButton = () => {
     try {
       await signOut(auth);
 
-      await fetch(`${API_ROUTE_GLOBAL}/auth/logout`, {
+      // Try local API first for logout
+      let response = await fetch(`${API_ROUTE_LOCAL}/auth/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
-      localStorage.removeItem("token");
+      // Fallback to global API if local fails
+      if (!response.ok) {
+        response = await fetch(`${API_ROUTE_GLOBAL}/auth/logout`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+      }
 
-      router.push("/");
+      if (response.ok) {
+        localStorage.removeItem("token");
+        router.push("/");
+      } else {
+        const errorData = await response.json();
+        console.error("Error during logout:", errorData.error);
+      }
     } catch (error) {
       console.error("Error during logout:", error);
     }

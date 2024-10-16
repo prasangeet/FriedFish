@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react'
-import { Button } from '@/components/ui/button'
+import React, { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,128 +7,145 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog'
-import { Progress } from '@/components/ui/progress'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle, Upload, X } from 'lucide-react'
-import Image from 'next/image'
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Upload, X } from 'lucide-react';
+import Image from 'next/image';
+
+const API_ROUTE_LOCAL = "http://localhost:5000/api"; // Local API URL
+const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"; // Global API URL
 
 export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
-  const [videoTitle, setVideoTitle] = useState('')
-  const [videoDescription, setVideoDescription] = useState('')
-  const [videoThumbnail, setVideoThumbnail] = useState(null)
-  const [videoFile, setVideoFile] = useState(null)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [error, setError] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
-  const thumbnailInputRef = useRef(null)
-  const videoInputRef = useRef(null)
-  const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api"
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoDescription, setVideoDescription] = useState('');
+  const [videoThumbnail, setVideoThumbnail] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const thumbnailInputRef = useRef(null);
+  const videoInputRef = useRef(null);
 
   const handleThumbnailChange = (event) => {
-    const file = event.target.files[0]
+    const file = event.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('Thumbnail size should be less than 5MB')
-        return
+        setError('Thumbnail size should be less than 5MB');
+        return;
       }
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setVideoThumbnail(reader.result)
-      }
-      reader.readAsDataURL(file)
-      setError('')
+        setVideoThumbnail(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError('');
     }
-  }
+  };
 
   const handleVideoChange = (event) => {
-    const file = event.target.files[0]
+    const file = event.target.files[0];
     if (file) {
       if (file.size > 100 * 1024 * 1024) {
-        setError('Video size should be less than 100MB')
-        return
+        setError('Video size should be less than 100MB');
+        return;
       }
-      setVideoFile(file)
-      setError('')
+      setVideoFile(file);
+      setError('');
     }
-  }
+  };
 
   const handleUploadVideo = async (event) => {
-    event.preventDefault()
-    setError('')
-    setIsUploading(true)
+    event.preventDefault();
+    setError('');
+    setIsUploading(true);
 
     if (!videoTitle.trim() || !videoDescription.trim() || !videoThumbnail || !videoFile) {
-      setError('Please fill in all fields and select both a thumbnail and a video file.')
-      setIsUploading(false)
-      return
+      setError('Please fill in all fields and select both a thumbnail and a video file.');
+      setIsUploading(false);
+      return;
     }
 
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('No token found. Please log in again.')
+        throw new Error('No token found. Please log in again.');
       }
 
-      const formData = new FormData()
-      formData.append('title', videoTitle)
-      formData.append('description', videoDescription)
-      formData.append('thumbnail', thumbnailInputRef.current.files[0])
-      formData.append('video', videoInputRef.current.files[0])
+      const formData = new FormData();
+      formData.append('title', videoTitle);
+      formData.append('description', videoDescription);
+      formData.append('thumbnail', thumbnailInputRef.current.files[0]);
+      formData.append('video', videoInputRef.current.files[0]);
 
-      const response = await fetch(`${API_ROUTE_GLOBAL}/videos/upload`, {
+      // First try the local API
+      const response = await fetch(`${API_ROUTE_LOCAL}/videos/upload`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
         },
         body: formData,
-      })
+      });
 
+      // If local API fails, try the global API
       if (!response.ok) {
         const errorResult = await response.json();
-        throw new Error(errorResult.message || 'Failed to upload video');
-      }      
+        // Attempt the global API
+        const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos/upload`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+        
+        if (!globalResponse.ok) {
+          const globalErrorResult = await globalResponse.json();
+          throw new Error(globalErrorResult.message || 'Failed to upload video');
+        }
+      }
 
-      const result = await response.json()
-      console.log('Video successfully uploaded:', result)
-      
+      const result = await response.json();
+      console.log('Video successfully uploaded:', result);
+
       // Simulate upload progress
       for (let i = 0; i <= 100; i += 10) {
-        setUploadProgress(i)
-        await new Promise(resolve => setTimeout(resolve, 200))
+        setUploadProgress(i);
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
 
       setTimeout(() => {
-        onOpenChange(false)
-        resetForm()
-        fetchVideos()
-      }, 1000)
+        onOpenChange(false);
+        resetForm();
+        fetchVideos();
+      }, 1000);
     } catch (error) {
-      console.error('Error uploading video:', error)
-      setError(error.message || 'An error occurred while uploading the video')
+      console.error('Error uploading video:', error);
+      setError(error.message || 'An error occurred while uploading the video');
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   const resetForm = () => {
-    setVideoTitle('')
-    setVideoDescription('')
-    setVideoThumbnail(null)
-    setVideoFile(null)
-    setUploadProgress(0)
-    setError('')
-    if (thumbnailInputRef.current) thumbnailInputRef.current.value = ''
-    if (videoInputRef.current) videoInputRef.current.value = ''
-  }
+    setVideoTitle('');
+    setVideoDescription('');
+    setVideoThumbnail(null);
+    setVideoFile(null);
+    setUploadProgress(0);
+    setError('');
+    if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
+    if (videoInputRef.current) videoInputRef.current.value = '';
+  };
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) resetForm()
-      onOpenChange(newOpen)
+      if (!newOpen) resetForm();
+      onOpenChange(newOpen);
     }}>
       <DialogContent className="sm:max-w-[425px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-gray-900 dark:text-white neon-border">
         <DialogHeader>
@@ -142,10 +159,7 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
         <form onSubmit={handleUploadVideo}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label
-                htmlFor="videoTitle"
-                className="text-right text-gray-900 dark:text-white"
-              >
+              <Label htmlFor="videoTitle" className="text-right text-gray-900 dark:text-white">
                 Title
               </Label>
               <Input
@@ -158,10 +172,7 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label
-                htmlFor="videoDescription"
-                className="text-right text-gray-900 dark:text-white"
-              >
+              <Label htmlFor="videoDescription" className="text-right text-gray-900 dark:text-white">
                 Description
               </Label>
               <Textarea
@@ -174,10 +185,7 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label
-                htmlFor="videoThumbnail"
-                className="text-right text-gray-900 dark:text-white"
-              >
+              <Label htmlFor="videoThumbnail" className="text-right text-gray-900 dark:text-white">
                 Thumbnail
               </Label>
               <div className="col-span-3">
@@ -212,8 +220,8 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
                       size="icon"
                       className="absolute top-1 right-1"
                       onClick={() => {
-                        setVideoThumbnail(null)
-                        if (thumbnailInputRef.current) thumbnailInputRef.current.value = ''
+                        setVideoThumbnail(null);
+                        if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
                       }}
                     >
                       <X className="h-4 w-4" />
@@ -223,10 +231,7 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label
-                htmlFor="videoFile"
-                className="text-right text-gray-900 dark:text-white"
-              >
+              <Label htmlFor="videoFile" className="text-right text-gray-900 dark:text-white">
                 Video File
               </Label>
               <div className="col-span-3">
@@ -285,5 +290,5 @@ export default function UploadDialog({ open, onOpenChange, fetchVideos }) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
