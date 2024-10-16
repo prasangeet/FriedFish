@@ -23,18 +23,40 @@ export default function Home() {
       if (token) {
         try {
           // Try the local API first
-          const localResponse = await fetch(`${API_ROUTE_LOCAL}/verify-token`, {
+          const response = await fetch(`${API_ROUTE_LOCAL}/verify-token`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${token}`,
             },
           });
   
-          // If the local API fails, try the global API
-          if (localResponse.ok) {
-            router.push("/dashboard");
+          // Check if the local API response is okay
+          if (!response.ok) {
+            // If the local API fails, try the global API
+            console.log("Local API failed, trying global API...");
+            const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/verify-token`, {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              },
+            });
+  
+            // Check global response status
+            if (globalResponse.ok) {
+              router.push("/dashboard");
+            } else {
+              localStorage.removeItem("token");
+              setError("Your session has expired. Please log in again.");
+            }
           } else {
-            // Check the global API only if local response is not OK
+            router.push("/dashboard");
+          }
+        } catch (error) {
+          console.error("Error verifying token:", error);
+          setError("An error occurred while verifying your session. Please try again.");
+          // Optionally attempt to use the global API on a fetch error
+          try {
+            console.log("Trying global API due to error in local API fetch...");
             const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/verify-token`, {
               method: "GET",
               headers: {
@@ -45,14 +67,13 @@ export default function Home() {
             if (globalResponse.ok) {
               router.push("/dashboard");
             } else {
-              // If both API calls fail, remove the token and set the error
               localStorage.removeItem("token");
               setError("Your session has expired. Please log in again.");
             }
+          } catch (globalError) {
+            console.error("Error verifying token with global API:", globalError);
+            setError("An error occurred while verifying your session with the global API. Please try again.");
           }
-        } catch (error) {
-          console.error("Error verifying token:", error);
-          setError("An error occurred while verifying your session. Please try again.");
         }
       }
       setIsLoading(false);
@@ -60,6 +81,7 @@ export default function Home() {
   
     checkTokenValidity();
   }, [router]);
+  
   
 
   useEffect(() => {
