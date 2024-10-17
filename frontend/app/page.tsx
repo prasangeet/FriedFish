@@ -22,7 +22,6 @@ export default function Home() {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          // Try the local API first
           const response = await fetch(`${API_ROUTE_LOCAL}/verify-token`, {
             method: "GET",
             headers: {
@@ -30,31 +29,15 @@ export default function Home() {
             },
           });
   
-          // Check if the local API response is okay
-          if (!response.ok) {
-            // If the local API fails, try the global API
-            console.log("Local API failed, trying global API...");
-            const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/verify-token`, {
-              method: "GET",
-              headers: {
-                "Authorization": `Bearer ${token}`,
-              },
-            });
-  
-            // Check global response status
-            if (globalResponse.ok) {
-              router.push("/dashboard");
-            } else {
-              localStorage.removeItem("token");
-              setError("Your session has expired. Please log in again.");
-            }
-          } else {
+          if (response.ok) {
             router.push("/dashboard");
+          } else {
+            localStorage.removeItem("token");
+            setError("Your session has expired. Please log in again.");
           }
         } catch (error) {
           console.error("Error verifying token:", error);
           setError("An error occurred while verifying your session. Please try again.");
-          // Optionally attempt to use the global API on a fetch error
           try {
             console.log("Trying global API due to error in local API fetch...");
             const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/verify-token`, {

@@ -126,16 +126,6 @@ const AuthTabs = () => {
         },
         body: JSON.stringify({ email, password }),
       });
-      
-      if (!response.ok) {
-        response = await fetch(`${API_ROUTE_GLOBAL}/auth/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        });
-      }
 
       const data = await response.json();
 
@@ -148,7 +138,32 @@ const AuthTabs = () => {
         setMessage(`Error: ${data.error}`);
       }
     } catch (error) {
-      setMessage(`Error: ${error.message}`);
+      console.error("local route failed", error)
+      setProgress(66);
+      try{
+        console.log("Trying global API due to error in local API fetch...");
+        const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/auth/login`,{
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        })
+
+        const data = await globalResponse.json()
+
+        if (globalResponse.ok) {
+          setProgress(100);
+          localStorage.setItem("token", data.token);
+          setMessage(`Login successful! Welcome ${data.displayName}`);
+          router.push("/dashboard");
+        } else {
+          setMessage(`Error: ${data.error}`);
+        }
+      }catch(error){
+        console.error("Failed to log in", error);
+        setMessage(`Error: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
       setProgress(0);
