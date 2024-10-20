@@ -41,37 +41,48 @@ export default function Dashboard() {
     }, 3000);
   }, [router]);
 
-  const fetchUserDetails = useCallback(async (uid) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_ROUTE_LOCAL}/profile/${uid}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      if (!response.ok) {
-        const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
+  const fetchUserDetails = useCallback(
+    async (uid) => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_ROUTE_LOCAL}/profile/${uid}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-        if (!globalResponse.ok) throw new Error("Failed to fetch user details");
-        const data = await globalResponse.json();
-        setUser(data);
-      } else {
-        const data = await response.json();
-        setUser(data);
+
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);
+        }
+      } catch (error) {
+        console.error("Error fetching user details using the local api trying global...:", error);
+        try {
+          const token = localStorage.getItem("token");
+          const globalResponse = await fetch(
+            `${API_ROUTE_GLOBAL}/profile/${uid}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+            
+          );
+          if (!globalResponse.ok)
+            throw new Error("Failed to fetch user details");
+          const data = await globalResponse.json();
+          setUser(data);
+        } catch (error) {
+          console.error("Error fetching user details", error);
+        }
       }
-    } catch (error) {
-      console.error("Error fetching user details:", error);
-    }
-  }, [handleInvalidToken]);
-  
+    },
+    [handleInvalidToken]
+  );
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -81,8 +92,15 @@ export default function Dashboard() {
           Authorization: `Bearer ${token}`,
         },
       });
-  
-      if (!response.ok) {
+
+      if(response.ok){
+        const data = await response.json;
+        setVideos(data);
+      }
+    } catch (error) {
+      console.error("Error fetching videos using the local api trying global...:", error);
+      try {
+        const token = localStorage.getItem("token");
         const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -90,15 +108,14 @@ export default function Dashboard() {
         });
         if (!globalResponse.ok) throw new Error("Failed to fetch videos");
         const data = await globalResponse.json();
+        console.log("Successfully fetched: ", data);
+        
         setVideos(data);
-      } else {
-        const data = await response.json();
-        setVideos(data);
+      } catch (error) {
+        console.error("Error fetching videos", error);
       }
-    } catch (error) {
-      console.error("Error fetching videos:", error);
     }
-  }, [handleInvalidToken]);  
+  }, [handleInvalidToken]);
 
   useEffect(() => {
     const isDarkMode = localStorage.getItem("darkMode") === "true";

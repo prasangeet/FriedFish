@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 import {
   MoonIcon,
   SunIcon,
@@ -21,8 +21,8 @@ import {
   MenuIcon,
   XIcon,
   SearchIcon,
-} from 'lucide-react'
-import LogoutButton from '@/components/LogoutButton'
+} from "lucide-react";
+import LogoutButton from "@/components/LogoutButton";
 
 export default function Header({
   darkMode,
@@ -34,13 +34,13 @@ export default function Header({
   mobileMenuOpen,
   toggleMobileMenu,
 }) {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e) => {
-    e.preventDefault()
-    console.log('Searching for:', searchQuery)
+    e.preventDefault();
+    console.log("Searching for:", searchQuery);
     // Implement search functionality here
-  }
+  };
 
   return (
     <header className="p-4 bg-white/80 dark:bg-slate-900/30 shadow-md transition-colors duration-200 border-b neon-border">
@@ -115,17 +115,16 @@ export default function Header({
             >
               <DropdownMenuLabel>Choose Neon Color</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => changeNeonColor('blue')}>
-                
+              <DropdownMenuItem onClick={() => changeNeonColor("blue")}>
                 Blue
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => changeNeonColor('red')}>
+              <DropdownMenuItem onClick={() => changeNeonColor("red")}>
                 Red
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => changeNeonColor('green')}>
+              <DropdownMenuItem onClick={() => changeNeonColor("green")}>
                 Green
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => changeNeonColor('purple')}>
+              <DropdownMenuItem onClick={() => changeNeonColor("purple")}>
                 Purple
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -134,9 +133,9 @@ export default function Header({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.profilePicture || ''} alt="User" />
+                  <AvatarImage src={user?.profilePicture || ""} alt="User" />
                   <AvatarFallback>
-                    {user?.displayName?.charAt(0) || 'U'}
+                    {user?.displayName?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -181,5 +180,5 @@ export default function Header({
         </div>
       </div>
     </header>
-  )
+  );
 }

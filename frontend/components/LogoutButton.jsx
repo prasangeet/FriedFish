@@ -24,16 +24,6 @@ const LogoutButton = () => {
         },
       });
 
-      // Fallback to global API if local fails
-      if (!response.ok) {
-        response = await fetch(`${API_ROUTE_GLOBAL}/auth/logout`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-      }
-
       if (response.ok) {
         localStorage.removeItem("token");
         router.push("/");
@@ -42,7 +32,26 @@ const LogoutButton = () => {
         console.error("Error during logout:", errorData.error);
       }
     } catch (error) {
-      console.error("Error during logout:", error);
+      try {
+        await signOut(auth);
+        let response = await fetch(`${API_ROUTE_GLOBAL}/auth/logout`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (response.ok) {
+          localStorage.removeItem("token");
+          router.push("/");
+        } else {
+          const errorData = await response.json();
+          console.error("Error during logout:", errorData.error);
+        }
+
+      } catch (error) {
+        console.error("Error during logout:", error);
+      }
     }
   };
 
