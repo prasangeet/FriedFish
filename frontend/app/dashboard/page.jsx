@@ -41,43 +41,44 @@ export default function Dashboard() {
     }, 3000);
   }, [router]);
 
+  const fetchWithToken = async (url, token) => {
+    const response = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        handleInvalidToken();
+      }
+      throw new Error(`Failed to fetch: ${response.status}`);
+    }
+
+    return response.json();
+  };
+
   const fetchUserDetails = useCallback(
     async (uid) => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_ROUTE_LOCAL}/profile/${uid}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      const token = localStorage.getItem("token");
 
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-        }
+      try {
+        const user = await fetchWithToken(
+          `${API_ROUTE_LOCAL}/profile/${uid}`,
+          token
+        );
+        setUser(user);
       } catch (error) {
-        console.error("Error fetching user details using the local api trying global...:", error);
+        console.error("Local API failed. Trying global API...");
         try {
-          const token = localStorage.getItem("token");
-          const globalResponse = await fetch(
+          const user = await fetchWithToken(
             `${API_ROUTE_GLOBAL}/profile/${uid}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-            
+            token
           );
-          if (!globalResponse.ok)
-            throw new Error("Failed to fetch user details");
-          const data = await globalResponse.json();
-          setUser(data);
+          setUser(user);
         } catch (error) {
-          console.error("Error fetching user details", error);
+          console.error("Failed to fetch user details:", error);
         }
       }
     },
@@ -85,34 +86,21 @@ export default function Dashboard() {
   );
 
   const fetchVideos = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_ROUTE_LOCAL}/videos`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const token = localStorage.getItem("token");
 
-      if(response.ok){
-        const data = await response.json;
-        setVideos(data);
-      }
+    try {
+      const videos = await fetchWithToken(`${API_ROUTE_LOCAL}/videos`, token);
+      setVideos(videos);
     } catch (error) {
-      console.error("Error fetching videos using the local api trying global...:", error);
+      console.error("Local API failed. Trying global API...");
       try {
-        const token = localStorage.getItem("token");
-        const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!globalResponse.ok) throw new Error("Failed to fetch videos");
-        const data = await globalResponse.json();
-        console.log("Successfully fetched: ", data);
-        
-        setVideos(data);
+        const videos = await fetchWithToken(
+          `${API_ROUTE_GLOBAL}/videos`,
+          token
+        );
+        setVideos(videos);
       } catch (error) {
-        console.error("Error fetching videos", error);
+        console.error("Failed to fetch videos:", error);
       }
     }
   }, [handleInvalidToken]);
@@ -126,14 +114,10 @@ export default function Dashboard() {
     setNeonColor(savedNeonColor);
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log("Auth state changed:", currentUser);
       if (currentUser) {
-        console.log("User is authenticated:", currentUser);
-        console.log("UID:", currentUser.uid);
         setUid(currentUser.uid);
         fetchUserDetails(currentUser.uid);
       } else {
-        console.log("No user is signed in.");
         setUid(null);
         setUser(null);
       }

@@ -29,10 +29,12 @@ const LogoutButton = () => {
         router.push("/");
       } else {
         const errorData = await response.json();
-        console.error("Error during logout:", errorData.error);
+        console.error("Local API logout error:", errorData.error);
       }
-    } catch (error) {
+    } catch (localApiError) {
+      console.error("Error during local API logout:", localApiError);
       try {
+        // Attempt global API logout
         await signOut(auth);
         let response = await fetch(`${API_ROUTE_GLOBAL}/auth/logout`, {
           method: "POST",
@@ -46,11 +48,10 @@ const LogoutButton = () => {
           router.push("/");
         } else {
           const errorData = await response.json();
-          console.error("Error during logout:", errorData.error);
+          console.error("Global API logout error:", errorData.error);
         }
-
-      } catch (error) {
-        console.error("Error during logout:", error);
+      } catch (globalApiError) {
+        console.error("Error during global API logout:", globalApiError);
       }
     }
   };

@@ -81,13 +81,18 @@ export default function VideoPage() {
           },
         });
 
+        if (response.status === 401) {
+          handleInvalidToken();
+          return;
+        }
+
         if (response.ok) {
           const data = await response.json();
           setUser(data);
         }
       } catch (error) {
         console.error(
-          "Error fetching user details using the local api trying global...:",
+          "Error fetching user details using the local api, trying global...",
           error
         );
         try {
@@ -102,10 +107,17 @@ export default function VideoPage() {
               },
             }
           );
-          if (!globalResponse.ok)
-            throw new Error("Failed to fetch user details");
-          const data = await globalResponse.json();
-          setUser(data);
+          if (globalResponse.status === 401) {
+            handleInvalidToken();
+            return;
+          }
+
+          if (globalResponse.ok) {
+            const data = await globalResponse.json();
+            setUser(data);
+          } else {
+            console.error("Error fetching user details from global API");
+          }
         } catch (error) {
           console.error("Error fetching user details", error);
         }
@@ -129,6 +141,7 @@ export default function VideoPage() {
           handleInvalidToken();
           return;
         }
+
         if (response.ok) {
           const data = await response.json();
           setVideo(data);
@@ -147,6 +160,7 @@ export default function VideoPage() {
           handleInvalidToken();
           return;
         }
+
         if (globalResponse.ok) {
           const data = await globalResponse.json();
           setVideo(data);
@@ -172,6 +186,7 @@ export default function VideoPage() {
         handleInvalidToken();
         return;
       }
+
       if (response.ok) {
         const data = await response.json();
         setFeaturedVideos(data);
@@ -180,7 +195,7 @@ export default function VideoPage() {
       }
     } catch (error) {
       try {
-        const token = localStorage("token");
+        const token = localStorage.getItem("token");
         const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos/`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -191,6 +206,7 @@ export default function VideoPage() {
           handleInvalidToken();
           return;
         }
+
         if (globalResponse.ok) {
           const data = await globalResponse.json();
           setFeaturedVideos(data);
@@ -198,7 +214,7 @@ export default function VideoPage() {
           console.error("Failed to fetch featured videos from global API");
         }
       } catch (error) {
-        console.error("Failed to fetch form global api", error);
+        console.error("Failed to fetch from global API", error);
       }
     }
   }, [handleInvalidToken]);
@@ -274,21 +290,18 @@ export default function VideoPage() {
       </div>
       <ProfileDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onClose={() => setDialogOpen(false)}
         user={user}
-        uid={uid}
-        fetchUserDetails={fetchUserDetails}
+        darkMode={darkMode}
       />
       {showAlert && (
-        <div className="fixed top-4 right-4 z-50">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Session Expired</AlertTitle>
-            <AlertDescription>
-              Your session has expired. Redirecting to login...
-            </AlertDescription>
-          </Alert>
-        </div>
+        <Alert className="fixed bottom-0 right-0 m-4 bg-red-500 text-white">
+          <AlertCircle className="h-6 w-6" />
+          <AlertTitle>Invalid Token</AlertTitle>
+          <AlertDescription>
+            Your session has expired. Redirecting to login...
+          </AlertDescription>
+        </Alert>
       )}
     </Layout>
   );
