@@ -41,23 +41,26 @@ export default function Dashboard() {
     }, 3000);
   }, [router]);
 
-  const fetchWithToken = async (url, token) => {
-    const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const fetchWithToken = useCallback(
+    async (url, token) => {
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        handleInvalidToken();
+      if (!response.ok) {
+        if (response.status === 401) {
+          handleInvalidToken();
+        }
+        throw new Error(`Failed to fetch: ${response.status}`);
       }
-      throw new Error(`Failed to fetch: ${response.status}`);
-    }
 
-    return response.json();
-  };
+      return response.json();
+    },
+    [handleInvalidToken]
+  );
 
   const fetchUserDetails = useCallback(
     async (uid) => {
@@ -82,7 +85,7 @@ export default function Dashboard() {
         }
       }
     },
-    [handleInvalidToken]
+    [fetchWithToken, API_ROUTE_LOCAL, API_ROUTE_GLOBAL]
   );
 
   const fetchVideos = useCallback(async () => {
@@ -103,7 +106,7 @@ export default function Dashboard() {
         console.error("Failed to fetch videos:", error);
       }
     }
-  }, [handleInvalidToken]);
+  }, [fetchWithToken, API_ROUTE_LOCAL, API_ROUTE_GLOBAL]);
 
   useEffect(() => {
     const isDarkMode = localStorage.getItem("darkMode") === "true";

@@ -1,3 +1,4 @@
+// components/VideoPage.jsx
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -26,7 +27,6 @@ export default function VideoPage() {
   const params = useParams();
   const [darkMode, setDarkMode] = useState(false);
   const [user, setUser] = useState(null);
-  const [uid, setUid] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [neonColor, setNeonColor] = useState("blue");
   const [video, setVideo] = useState(null);
@@ -90,10 +90,10 @@ export default function VideoPage() {
           const data = await response.json();
           setUser(data);
         }
-      } catch (error) {
+      } catch (localApiError) {
         console.error(
-          "Error fetching user details using the local api, trying global...",
-          error
+          "Error fetching user details using the local API, trying global...",
+          localApiError
         );
         try {
           const token = localStorage.getItem("token");
@@ -118,8 +118,8 @@ export default function VideoPage() {
           } else {
             console.error("Error fetching user details from global API");
           }
-        } catch (error) {
-          console.error("Error fetching user details", error);
+        } catch (globalApiError) {
+          console.error("Error fetching user details", globalApiError);
         }
       }
     },
@@ -136,7 +136,6 @@ export default function VideoPage() {
           },
         });
 
-        // If local fails, try global API
         if (response.status === 401) {
           handleInvalidToken();
           return;
@@ -148,7 +147,11 @@ export default function VideoPage() {
         } else {
           console.error("Failed to fetch video from local API");
         }
-      } catch (error) {
+      } catch (localApiError) {
+        console.error(
+          "Error fetching video from local API, trying global...",
+          localApiError
+        );
         const token = localStorage.getItem("token");
         const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos/${id}`, {
           headers: {
@@ -181,7 +184,6 @@ export default function VideoPage() {
         },
       });
 
-      // If local fails, try global API
       if (response.status === 401) {
         handleInvalidToken();
         return;
@@ -193,7 +195,11 @@ export default function VideoPage() {
       } else {
         console.error("Failed to fetch featured videos from local API");
       }
-    } catch (error) {
+    } catch (localApiError) {
+      console.error(
+        "Error fetching featured videos from local API, trying global...",
+        localApiError
+      );
       try {
         const token = localStorage.getItem("token");
         const globalResponse = await fetch(`${API_ROUTE_GLOBAL}/videos/`, {
@@ -213,8 +219,8 @@ export default function VideoPage() {
         } else {
           console.error("Failed to fetch featured videos from global API");
         }
-      } catch (error) {
-        console.error("Failed to fetch from global API", error);
+      } catch (globalApiError) {
+        console.error("Failed to fetch from global API", globalApiError);
       }
     }
   }, [handleInvalidToken]);
@@ -229,10 +235,9 @@ export default function VideoPage() {
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        setUid(currentUser.uid);
+        setUid(currentUser.uid); // You need the uid to fetch details, so keeping the assignment
         fetchUserDetails(currentUser.uid);
       } else {
-        setUid(null);
         setUser(null);
       }
     });
@@ -295,11 +300,14 @@ export default function VideoPage() {
         darkMode={darkMode}
       />
       {showAlert && (
-        <Alert className="fixed bottom-0 right-0 m-4 bg-red-500 text-white">
-          <AlertCircle className="h-6 w-6" />
-          <AlertTitle>Invalid Token</AlertTitle>
+        <Alert
+          className="fixed bottom-4 right-4 w-full max-w-sm shadow-lg z-50"
+          variant="destructive"
+        >
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Session Expired</AlertTitle>
           <AlertDescription>
-            Your session has expired. Redirecting to login...
+            Your session has expired. Redirecting to the home page...
           </AlertDescription>
         </Alert>
       )}
