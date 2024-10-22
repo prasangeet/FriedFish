@@ -73,7 +73,7 @@ export default function Dashboard() {
         );
         setUser(user);
       } catch (error) {
-        console.error("Local API failed. Trying global API...");
+        console.error("Local API failed. Trying global API...", error);
         try {
           const user = await fetchWithToken(
             `${API_ROUTE_GLOBAL}/profile/${uid}`,
@@ -95,7 +95,7 @@ export default function Dashboard() {
       const videos = await fetchWithToken(`${API_ROUTE_LOCAL}/videos`, token);
       setVideos(videos);
     } catch (error) {
-      console.error("Local API failed. Trying global API...");
+      console.error("Local API failed. Trying global API...", error);
       try {
         const videos = await fetchWithToken(
           `${API_ROUTE_GLOBAL}/videos`,
