@@ -27,7 +27,6 @@ export default function VideoPage() {
   const params = useParams();
   const [darkMode, setDarkMode] = useState(false);
   const [user, setUser] = useState(null);
-  const [uid, setUid] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [neonColor, setNeonColor] = useState("blue");
   const [video, setVideo] = useState(null);
@@ -228,7 +227,7 @@ export default function VideoPage() {
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        setUid(currentUser.uid); // You need the uid to fetch details, so keeping the assignment
+         // You need the uid to fetch details, so keeping the assignment
         fetchUserDetails(currentUser.uid);
       } else {
         setUser(null);
