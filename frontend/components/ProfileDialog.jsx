@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CameraIcon } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function ProfileDialog({
   open,
@@ -22,13 +23,18 @@ export default function ProfileDialog({
   fetchUserDetails,
 }) {
   const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api";
-  const API_ROUTE_LOCAL = "http://localhost:3000/api"; // Add your local API route
-  const [displayName, setDisplayName] = useState(user?.displayName || "");
-  const [profilePicture, setProfilePicture] = useState(
-    user?.profilePicture || ""
-  ); // Default image URL
+  const API_ROUTE_LOCAL = "http://localhost:3000/api";
+  const [displayName, setDisplayName] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
   const [profileUpdateProgress, setProfileUpdateProgress] = useState(0);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.displayName || "");
+      setProfilePicture(user.profilePicture || "");
+    }
+  }, [user]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -47,29 +53,30 @@ export default function ProfileDialog({
 
   const handleSaveProfile = async (event) => {
     event.preventDefault();
-
     try {
       const token = localStorage.getItem("token");
-      console.log("Token being sent:", token);
-
       if (!token) {
         throw new Error("No token found. Please log in again.");
       }
 
-      const formData = new FormData();
-      formData.append("displayName", displayName);
-
-      if (fileInputRef.current.files[0]) {
-        formData.append("profilePicture", fileInputRef.current.files[0]);
+      if (!fileInputRef.current.files[0]) {
+        toast({
+          title: "Image Required",
+          description: "Please attach an image file before saving.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      // Simulating a slow upload process
+      const formData = new FormData();
+      formData.append("displayName", displayName);
+      formData.append("profilePicture", fileInputRef.current.files[0]);
+
       for (let i = 0; i <= 100; i += 10) {
         setProfileUpdateProgress(i);
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      // Try local API first for updating the profile
       let response = await fetch(`${API_ROUTE_LOCAL}/profile/${uid}`, {
         method: "PUT",
         headers: {
@@ -78,7 +85,6 @@ export default function ProfileDialog({
         body: formData,
       });
 
-      // Fallback to global API if local fails
       if (!response.ok) {
         response = await fetch(`${API_ROUTE_GLOBAL}/profile/${uid}`, {
           method: "PUT",
@@ -90,18 +96,15 @@ export default function ProfileDialog({
       }
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Failed to update profile:", errorData);
         throw new Error("Failed to update profile");
       }
 
       const updatedUser = await response.json();
-      setDisplayName(updatedUser.displayName); // Update state after success
+      setDisplayName(updatedUser.displayName);
       setProfilePicture(updatedUser.profilePicture);
       fetchUserDetails(uid);
       onOpenChange(false);
       setProfileUpdateProgress(0);
-      console.log("Profile successfully updated:", updatedUser);
     } catch (error) {
       console.error("Error updating profile:", error);
       setProfileUpdateProgress(0);

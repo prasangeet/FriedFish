@@ -117,9 +117,6 @@ export default function CommentSection({ videoId }) {
           }),
         }
       );
-
-      // Fallback to global API if local fails
-
       if (response.ok) {
         setNewComment("");
         fetchComments();
