@@ -22,21 +22,17 @@ export default function CommentSection({ videoId }) {
   const [profilePicture, setProfilePicture] = useState("");
   const [userId, setUserId] = useState("");
   const API_ROUTE_GLOBAL = "https://fried-fish.vercel.app/api";
-  const API_ROUTE_LOCAL = "http://localhost:3000/api";
+  const API_ROUTE_LOCAL = "http://localhost:5000/api";
 
   const fetchComments = useCallback(async () => {
     try {
-      let response = await fetch(`${API_ROUTE_LOCAL}/videos/${videoId}/comments`);
-      
-      if (!response.ok) {
-        response = await fetch(`${API_ROUTE_GLOBAL}/videos/${videoId}/comments`);
-      }
-
+      let response = await fetch(
+        `${API_ROUTE_LOCAL}/videos/${videoId}/comments`
+      );
       if (response.ok) {
         const data = await response.json();
-        // Sort comments by createdAt in descending order
-        const sortedComments = data.sort((a, b) => 
-          new Date(b.createdAt) - new Date(a.createdAt)
+        const sortedComments = data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
         setComments(sortedComments);
         console.log("Fetched comments:", sortedComments);
@@ -44,7 +40,24 @@ export default function CommentSection({ videoId }) {
         console.log("Failed to load comments:", response.statusText);
       }
     } catch (error) {
-      console.error("Error fetching comments:", error);
+      console.error("Error fetching comments with local api:", error);
+      try {
+        let response = await fetch(
+          `${API_ROUTE_GLOBAL}/videos/${videoId}/comments`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const sortedComments = data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setComments(sortedComments);
+          console.log("Fetched comments:", sortedComments);
+        } else {
+          console.log("Failed to load comments:", response.statusText);
+        }
+      } catch (error) {
+        console.log("Failed to load comments:", error);
+      }
     }
   }, [videoId]);
 
@@ -74,7 +87,6 @@ export default function CommentSection({ videoId }) {
     fetchComments();
   }, [userId, videoId, fetchComments]);
 
-  
   const handleSubmitComment = async (e) => {
     e.preventDefault();
 
@@ -107,8 +119,18 @@ export default function CommentSection({ videoId }) {
       );
 
       // Fallback to global API if local fails
-      if (!response.ok) {
-        response = await fetch(
+
+      if (response.ok) {
+        setNewComment("");
+        fetchComments();
+      } else {
+        const errorData = await response.json();
+        console.error("Error posting comment:", errorData.error);
+      }
+    } catch (error) {
+      console.error("Error posting comment from local api..", error);
+      try {
+        let response = await fetch(
           `${API_ROUTE_GLOBAL}/videos/${videoId}/comments`,
           {
             method: "POST",
@@ -124,17 +146,17 @@ export default function CommentSection({ videoId }) {
             }),
           }
         );
-      }
 
-      if (response.ok) {
-        setNewComment("");
-        fetchComments();
-      } else {
-        const errorData = await response.json();
-        console.error("Error posting comment:", errorData.error);
+        if (response.ok) {
+          setNewComment("");
+          fetchComments();
+        } else {
+          const errorData = await response.json();
+          console.error("Error posting comment:", errorData.error);
+        }
+      } catch (error) {
+        console.log("Error posting the comment...", error);
       }
-    } catch (error) {
-      console.error("Error posting comment:", error);
     }
   };
 
@@ -152,16 +174,6 @@ export default function CommentSection({ videoId }) {
       );
 
       if (!response.ok) {
-        response = await fetch(
-          `${API_ROUTE_GLOBAL}/videos/${videoId}/comments/${commentId}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
       }
 
       if (response.ok) {
@@ -173,6 +185,27 @@ export default function CommentSection({ videoId }) {
       }
     } catch (error) {
       console.error("Error deleting comment:", error);
+      try {
+        let response = await fetch(
+          `${API_ROUTE_GLOBAL}/videos/${videoId}/comments/${commentId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          fetchComments();
+        } else {
+          const errorData = await response.json();
+          console.error("Error deleting comment:", errorData.error);
+        }
+      } catch (error) {
+        console.log("Error deleting the comment:", error);
+      }
     }
   };
 
