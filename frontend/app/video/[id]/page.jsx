@@ -27,6 +27,7 @@ export default function VideoPage() {
   const params = useParams();
   const [darkMode, setDarkMode] = useState(false);
   const [user, setUser] = useState(null);
+  const [uid, setUid] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [neonColor, setNeonColor] = useState("blue");
   const [video, setVideo] = useState(null);
@@ -69,62 +70,54 @@ export default function VideoPage() {
     }, 3000);
   }, [router]);
 
-  const fetchUserDetails = useCallback(
-    async (uid) => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_ROUTE_LOCAL}/profile/${uid}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  const fetchWithToken = useCallback(
+    async (url, token) => {
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
+      if (!response.ok) {
         if (response.status === 401) {
           handleInvalidToken();
-          return;
         }
-
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-        }
-      } catch (localApiError) {
-        console.error(
-          "Error fetching user details using the local API, trying global...",
-          localApiError
-        );
-        try {
-          const token = localStorage.getItem("token");
-          const globalResponse = await fetch(
-            `${API_ROUTE_GLOBAL}/profile/${uid}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          if (globalResponse.status === 401) {
-            handleInvalidToken();
-            return;
-          }
-
-          if (globalResponse.ok) {
-            const data = await globalResponse.json();
-            setUser(data);
-          } else {
-            console.error("Error fetching user details from global API");
-          }
-        } catch (globalApiError) {
-          console.error("Error fetching user details", globalApiError);
-        }
+        throw new Error(`Failed to fetch: ${response.status}`);
       }
+
+      return response.json();
     },
     [handleInvalidToken]
   );
+
+  const fetchUserDetails = useCallback(
+    async (uid) => {
+      const token = localStorage.getItem("token");
+
+      try {
+        const user = await fetchWithToken(
+          `${API_ROUTE_LOCAL}/profile/${uid}`,
+          token
+        );
+        setUser(user);
+      } catch (error) {
+        console.error("Local API failed. Trying global API...", error);
+        try {
+          const user = await fetchWithToken(
+            `${API_ROUTE_GLOBAL}/profile/${uid}`,
+            token
+          );
+          setUser(user);
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+        }
+      }
+    },
+    [fetchWithToken, API_ROUTE_LOCAL, API_ROUTE_GLOBAL]
+  );
+
+
 
   const fetchVideo = useCallback(
     async (id) => {
