@@ -9,6 +9,7 @@ import videoUploadRoutes from "./routes/videos/upload.js";
 import videoFetchRoutes from "./routes/videos/fetch.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import verificationRoutes from "./routes/verification.js";
+import likesRoutes from "./routes/videos/likes.js";
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use("/api/profile", authMiddleware, profileRoutes);
 app.use("/api/videos", videoUploadRoutes);
 app.use("/api/videos", videoFetchRoutes);
 app.use("/api/videos", commentRoutes);
+app.use("/api/videos", likesRoutes);
 
 //protectedRoute
 app.get("/api/protected", authMiddleware, (req, res) => {

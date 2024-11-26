@@ -116,8 +116,6 @@ export default function VideoPage() {
     [fetchWithToken, API_ROUTE_LOCAL, API_ROUTE_GLOBAL]
   );
 
-
-
   const fetchVideo = useCallback(
     async (id) => {
       try {
@@ -227,7 +225,7 @@ export default function VideoPage() {
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-         // You need the uid to fetch details, so keeping the assignment
+        // You need the uid to fetch details, so keeping the assignment
         fetchUserDetails(currentUser.uid);
       } else {
         setUser(null);
